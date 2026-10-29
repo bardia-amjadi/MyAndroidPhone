@@ -1,7 +1,6 @@
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Windows.Storage.Pickers;
-using Windows.System;
 using WinRT.Interop;
 
 namespace MyAndroidPhone.Desktop.Services;
@@ -163,6 +162,6 @@ public sealed class FolderLauncher : IFolderLauncher
             return false;
         }
 
-        return await Launcher.LaunchFolderPathAsync(path);
+        return await Windows.System.Launcher.LaunchFolderPathAsync(path);
     }
 }

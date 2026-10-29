@@ -92,7 +92,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
 
     public string ApplicationLicenseStatement => LegalNotices.ApplicationLicenseStatement;
 
-    public int StepCount => StepTitles.Length;
+    public double StepCount => StepTitles.Length;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StepTitle), nameof(StepNumber), nameof(CanGoBack), nameof(ShowNext), nameof(ShowAccept), nameof(ShowFinish))]
