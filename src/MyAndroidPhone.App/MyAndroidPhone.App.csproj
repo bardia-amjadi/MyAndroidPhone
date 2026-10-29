@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Native WinUI 3 desktop shell (packaged by default, so F5 in Visual Studio produces an MSIX-identity app).
+    CI also publishes an unpackaged, self-contained build: -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:SelfContained=true
+    Minimum OS: TargetPlatformMinVersion 10.0.17763.0 (Windows 10 1809), the minimum documented for the pinned Windows App SDK 1.x line.
+    Re-verify when bumping Microsoft.WindowsAppSDK.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>MyAndroidPhone.Desktop</RootNamespace>
+    <AssemblyName>MyAndroidPhone</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- Program.cs provides Main() so the app can enforce a single running instance. -->
+    <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyAndroidPhone.Core\MyAndroidPhone.Core.csproj" />
+    <ProjectReference Include="..\MyAndroidPhone.Infrastructure\MyAndroidPhone.Infrastructure.csproj" />
+    <ProjectReference Include="..\MyAndroidPhone.Tools\MyAndroidPhone.Tools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+    <Content Include="Assets\*.png" />
+  </ItemGroup>
+</Project>

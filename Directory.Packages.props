@@ -1,0 +1,22 @@
+<Project>
+  <!--
+    Central package management: every external dependency is pinned here, once.
+    Why each package is needed:
+      CommunityToolkit.Mvvm                       MVVM source generators (ObservableObject, RelayCommand) for the WinUI app.
+      Microsoft.Extensions.DependencyInjection    Dependency injection container.
+      Microsoft.Extensions.Logging(.Abstractions) ILogger abstractions; our own rotating file provider implements ILoggerProvider.
+      Microsoft.WindowsAppSDK                     WinUI 3 + Windows App SDK runtime (single-instance, backdrops, windowing).
+    Windows App SDK is pinned to the 1.8 line. Newer major lines exist; do not bump without
+    re-checking the minimum OS build, target framework and packaging requirements for that line.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.250907003" />
+  </ItemGroup>
+</Project>

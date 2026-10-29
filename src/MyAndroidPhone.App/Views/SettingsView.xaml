@@ -1,0 +1,43 @@
+<UserControl
+    x:Class="MyAndroidPhone.Desktop.Views.SettingsView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel Padding="20" Spacing="14">
+            <TextBlock Text="Application settings" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                       Text="Changes are saved immediately. Per-device settings will appear here once device connectivity is implemented." />
+
+            <TextBlock Text="Appearance" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+            <ComboBox Header="Theme" SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}" MinWidth="220">
+                <ComboBoxItem Content="Dark" />
+                <ComboBoxItem Content="Light" />
+                <ComboBoxItem Content="Follow system" />
+            </ComboBox>
+            <ToggleSwitch Header="Dock labels" OnContent="Show labels" OffContent="Icons only" IsOn="{x:Bind ViewModel.ShowDockLabels, Mode=TwoWay}" />
+
+            <TextBlock Text="Logging" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+            <ComboBox Header="Log detail (applies after restart)" SelectedIndex="{x:Bind ViewModel.LogVerbosityIndex, Mode=TwoWay}" MinWidth="220">
+                <ComboBoxItem Content="Normal" />
+                <ComboBoxItem Content="Verbose (includes every command run)" />
+            </ComboBox>
+            <NumberBox Header="Maximum size of one log file (MB, applies after restart)" Minimum="1" Maximum="100"
+                       SpinButtonPlacementMode="Inline" Value="{x:Bind ViewModel.LogFileSizeMegabytes, Mode=TwoWay}" MinWidth="220" HorizontalAlignment="Left" />
+            <NumberBox Header="Log files to keep (applies after restart)" Minimum="1" Maximum="30"
+                       SpinButtonPlacementMode="Inline" Value="{x:Bind ViewModel.LogRetainedFiles, Mode=TwoWay}" MinWidth="220" HorizontalAlignment="Left" />
+
+            <TextBlock Text="Application data" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+            <TextBlock Text="{x:Bind ViewModel.DataFolder}" IsTextSelectionEnabled="True" TextWrapping="Wrap" Opacity="0.8" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="Open data folder" Command="{x:Bind ViewModel.OpenDataFolderCommand}" />
+                <Button Content="Open logs folder" Command="{x:Bind ViewModel.OpenLogsFolderCommand}" />
+            </StackPanel>
+
+            <TextBlock Text="Reset" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+            <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                       Text="Restores application settings to their defaults and clears selected tool paths. Setup progress and log files are not touched." />
+            <Button Content="Reset application settings" Command="{x:Bind ViewModel.ResetCommand}" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

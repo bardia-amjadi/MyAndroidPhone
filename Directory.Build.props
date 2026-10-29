@@ -1,0 +1,15 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Product>My Android Phone</Product>
+    <Version>0.1.0</Version>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!-- Libraries must be warning-clean. The WinUI app project is excluded because XAML-generated code can emit warnings we do not control. -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'MyAndroidPhone.App'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

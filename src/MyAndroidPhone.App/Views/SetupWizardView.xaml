@@ -1,0 +1,104 @@
+<UserControl
+    x:Class="MyAndroidPhone.Desktop.Views.SetupWizardView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MyAndroidPhone.Desktop.ViewModels"
+    xmlns:views="using:MyAndroidPhone.Desktop.Views"
+    xmlns:h="using:MyAndroidPhone.Desktop.Helpers">
+
+    <Grid Padding="32" RowSpacing="16" MaxWidth="900" HorizontalAlignment="Center">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="6">
+            <TextBlock Text="{x:Bind ViewModel.StepTitle, Mode=OneWay}" Style="{StaticResource TitleTextBlockStyle}" />
+            <ProgressBar Minimum="1" Maximum="{x:Bind ViewModel.StepCount}" Value="{x:Bind ViewModel.StepNumber, Mode=OneWay}" />
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+            <!-- Step 0: Welcome -->
+            <ScrollViewer Visibility="{x:Bind h:Converters.StepVisibility(ViewModel.StepIndex, 0), Mode=OneWay}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Welcome to My Android Phone" Style="{StaticResource SubtitleTextBlockStyle}" />
+                    <TextBlock TextWrapping="Wrap"
+                               Text="My Android Phone connects to Android devices from Windows through Android Debug Bridge (adb). This setup checks the tools it depends on and shows the notices you need to accept." />
+                    <TextBlock TextWrapping="Wrap"
+                               Text="This version provides the desktop shell, tool detection and selection, settings and diagnostics. Device connections, file transfer, screen mirroring and app management are not available yet, and nothing in this application pretends otherwise." />
+                    <TextBlock Text="This computer" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                    <TextBlock Text="{x:Bind ViewModel.CompatibilityText}" />
+                    <InfoBar IsOpen="{x:Bind ViewModel.HasCompatibilityIssues}" IsClosable="False" Severity="Warning"
+                             Title="Compatibility" Message="{x:Bind ViewModel.CompatibilityIssuesText}" />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 1: Tools -->
+            <ScrollViewer Visibility="{x:Bind h:Converters.StepVisibility(ViewModel.StepIndex, 1), Mode=OneWay}">
+                <StackPanel Spacing="12">
+                    <TextBlock TextWrapping="Wrap"
+                               Text="Existing installations are detected automatically (app tools folder, ANDROID_HOME, PATH). If a tool is missing, install Android SDK Platform-Tools from the download page, or point to an executable you already have. Nothing is downloaded or installed on your behalf in this version, and your PATH is never changed." />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Check again" Command="{x:Bind ViewModel.RescanCommand}" />
+                        <ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsScanning, Mode=OneWay}" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.ToolItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ToolItemViewModel">
+                                <views:ToolCard Item="{x:Bind}" Margin="0,0,0,12" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="You can continue without these tools. Features that need them will say what is missing." />
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 2: Legal -->
+            <ScrollViewer Visibility="{x:Bind h:Converters.StepVisibility(ViewModel.StepIndex, 2), Mode=OneWay}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Security and privacy" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.SecurityNotice}" TextWrapping="Wrap" />
+                    <TextBlock Text="Application license" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                    <TextBlock Text="{x:Bind ViewModel.ApplicationLicenseStatement}" TextWrapping="Wrap" />
+                    <TextBlock Text="Third-party components" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="These components keep their own licenses. Follow the links for the full terms." />
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Notices}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NoticeViewModel">
+                                <StackPanel Margin="0,0,0,10">
+                                    <TextBlock Text="{x:Bind Component}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <TextBlock Text="{x:Bind License}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{x:Bind Note}" TextWrapping="Wrap" Opacity="0.7" Style="{StaticResource CaptionTextBlockStyle}" />
+                                    <HyperlinkButton Content="{x:Bind LinkText}" NavigateUri="{x:Bind Link}" Padding="0" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Step 3: Finish -->
+            <ScrollViewer Visibility="{x:Bind h:Converters.StepVisibility(ViewModel.StepIndex, 3), Mode=OneWay}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Setup is complete" Style="{StaticResource SubtitleTextBlockStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.FinishSummary, Mode=OneWay}" TextWrapping="Wrap" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="You can change tool locations later in Tool Manager. Connecting a device will be added in a later version." />
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <Button Content="Back" Command="{x:Bind ViewModel.BackCommand}" IsEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}" />
+            <Button Content="Next" Command="{x:Bind ViewModel.NextCommand}" Style="{StaticResource AccentButtonStyle}"
+                    Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.ShowNext), Mode=OneWay}" />
+            <Button Content="Accept and continue" Command="{x:Bind ViewModel.AcceptCommand}" Style="{StaticResource AccentButtonStyle}"
+                    Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.ShowAccept), Mode=OneWay}" />
+            <Button Content="Open My Android Phone" Command="{x:Bind ViewModel.FinishCommand}" Style="{StaticResource AccentButtonStyle}"
+                    Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.ShowFinish), Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

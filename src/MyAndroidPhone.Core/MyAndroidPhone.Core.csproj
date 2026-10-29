@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domain models, interfaces and shared abstractions. No package dependencies on purpose. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>MyAndroidPhone.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
