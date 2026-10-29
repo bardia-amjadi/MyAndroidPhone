@@ -1,0 +1,57 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64, ARM64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore src/MyAndroidPhone.App/MyAndroidPhone.App.csproj -r win-${{ matrix.platform }}
+
+      - name: Build solution (Release)
+        run: dotnet build MyAndroidPhone.sln -c Release -p:Platform=${{ matrix.platform }} --no-restore -bl:artifacts/build-${{ matrix.platform }}.binlog
+        continue-on-error: false
+
+      - name: Publish unpackaged self-contained build
+        run: >
+          dotnet publish src/MyAndroidPhone.App/MyAndroidPhone.App.csproj -c Release
+          -r win-${{ matrix.platform }} -p:Platform=${{ matrix.platform }}
+          -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:SelfContained=true
+          -o artifacts/publish-${{ matrix.platform }}
+
+      - name: Verify published files
+        shell: pwsh
+        run: |
+          if (-not (Test-Path artifacts/publish-${{ matrix.platform }}/MyAndroidPhone.exe)) { throw "MyAndroidPhone.exe was not produced" }
+          Get-ChildItem artifacts/publish-${{ matrix.platform }} | Measure-Object | ForEach-Object { "$($_.Count) files published" }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyAndroidPhone-${{ matrix.platform }}-unpackaged
+          path: artifacts/publish-${{ matrix.platform }}
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build-logs-${{ matrix.platform }}
+          path: artifacts/*.binlog
+          if-no-files-found: ignore
