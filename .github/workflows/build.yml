@@ -34,6 +34,15 @@ jobs:
         run: dotnet build MyAndroidPhone.sln -c Release -p:Platform=${{ matrix.platform }} --no-restore -bl:artifacts/build-${{ matrix.platform }}.binlog
         continue-on-error: false
 
+      - name: Show XAML compiler output on failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem src/MyAndroidPhone.App/obj -Recurse -Filter output.json -ErrorAction SilentlyContinue | ForEach-Object {
+            "=== $($_.FullName) ==="
+            Get-Content $_.FullName -Raw
+          }
+
       - name: Publish unpackaged self-contained build
         run: >
           dotnet publish src/MyAndroidPhone.App/MyAndroidPhone.App.csproj -c Release
