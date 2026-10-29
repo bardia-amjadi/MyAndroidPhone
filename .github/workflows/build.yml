@@ -15,7 +15,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [x64, ARM64]
+        include:
+          - platform: x64
+            rid: win-x64
+          - platform: ARM64
+            rid: win-arm64
     steps:
       - uses: actions/checkout@v4
 
@@ -24,7 +28,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore src/MyAndroidPhone.App/MyAndroidPhone.App.csproj -r win-${{ matrix.platform }}
+        run: dotnet restore src/MyAndroidPhone.App/MyAndroidPhone.App.csproj -r ${{ matrix.rid }}
 
       - name: Build solution (Release)
         run: dotnet build MyAndroidPhone.sln -c Release -p:Platform=${{ matrix.platform }} --no-restore -bl:artifacts/build-${{ matrix.platform }}.binlog
@@ -33,7 +37,7 @@ jobs:
       - name: Publish unpackaged self-contained build
         run: >
           dotnet publish src/MyAndroidPhone.App/MyAndroidPhone.App.csproj -c Release
-          -r win-${{ matrix.platform }} -p:Platform=${{ matrix.platform }}
+          -r ${{ matrix.rid }} -p:Platform=${{ matrix.platform }}
           -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true -p:SelfContained=true
           -o artifacts/publish-${{ matrix.platform }}
 
