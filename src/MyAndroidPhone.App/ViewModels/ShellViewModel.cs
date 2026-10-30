@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MyAndroidPhone.Core.Devices;
 using MyAndroidPhone.Core.Features;
 using MyAndroidPhone.Core.Settings;
 using MyAndroidPhone.Core.Tools;
@@ -43,9 +44,12 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
     private readonly IToolService _tools;
     private readonly ISettingsService _settings;
     private readonly IUiDispatcher _ui;
+    private readonly IDeviceService _deviceService;
+    private bool _syncingDevices;
 
-    public ShellViewModel(IFeatureRegistry features, IToolService tools, ISettingsService settings, IUiDispatcher ui)
+    public ShellViewModel(IFeatureRegistry features, IToolService tools, ISettingsService settings, IDeviceService deviceService, IUiDispatcher ui)
     {
+        _deviceService = deviceService;
         _features = features;
         _tools = tools;
         _settings = settings;
@@ -60,9 +64,57 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         _toolSummary = BuildToolSummary();
         _tools.Changed += OnStateChanged;
         _settings.Changed += OnStateChanged;
+        _deviceService.Changed += OnDevicesChanged;
+        _deviceStatus = string.Empty;
+        RebuildDevices();
     }
 
     public ObservableCollection<DockItemViewModel> DockItems { get; } = new();
+
+    public ObservableCollection<DeviceItemViewModel> Devices { get; } = new();
+
+    [ObservableProperty]
+    private DeviceItemViewModel? _selectedDevice;
+
+    [ObservableProperty]
+    private string _deviceStatus;
+
+    partial void OnSelectedDeviceChanged(DeviceItemViewModel? value)
+    {
+        if (!_syncingDevices && value is not null)
+        {
+            _ = _deviceService.SelectAsync(value.Serial);
+        }
+    }
+
+    private void OnDevicesChanged(object? sender, EventArgs e) => _ui.Post(RebuildDevices);
+
+    private void RebuildDevices()
+    {
+        var wanted = _deviceService.SelectedDeviceId;
+        _syncingDevices = true;
+        try
+        {
+            Devices.Clear();
+            foreach (var device in _deviceService.Devices)
+            {
+                Devices.Add(new DeviceItemViewModel(device));
+            }
+
+            SelectedDevice = Devices.FirstOrDefault(d => d.Serial == wanted);
+        }
+        finally
+        {
+            _syncingDevices = false;
+        }
+
+        var ready = Devices.Count(d => d.Device.IsOnline);
+        DeviceStatus = Devices.Count == 0
+            ? _deviceService.StatusMessage
+            : SelectedDevice is { } selected && selected.HasGuidance
+                ? selected.Guidance
+                : $"{ready} of {Devices.Count} device(s) ready";
+    }
 
     public IReadOnlyList<FeatureDescriptor> Features => _features.All;
 
@@ -94,6 +146,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
     {
         _tools.Changed -= OnStateChanged;
         _settings.Changed -= OnStateChanged;
+        _deviceService.Changed -= OnDevicesChanged;
     }
 
     private void OnStateChanged(object? sender, EventArgs e) => _ui.Post(() =>

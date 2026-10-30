@@ -10,6 +10,7 @@ public sealed class AppPaths
             "MyAndroidPhone");
         SettingsFile = Path.Combine(Root, "settings.json");
         SetupStateFile = Path.Combine(Root, "setup-state.json");
+        DevicesFile = Path.Combine(Root, "devices.json");
         LogsDirectory = Path.Combine(Root, "logs");
         ToolsDirectory = Path.Combine(Root, "tools");
     }
@@ -19,6 +20,8 @@ public sealed class AppPaths
     public string SettingsFile { get; }
 
     public string SetupStateFile { get; }
+
+    public string DevicesFile { get; }
 
     public string LogsDirectory { get; }
 

@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MyAndroidPhone.Android\MyAndroidPhone.Android.csproj" />
     <ProjectReference Include="..\MyAndroidPhone.Core\MyAndroidPhone.Core.csproj" />
     <ProjectReference Include="..\MyAndroidPhone.Infrastructure\MyAndroidPhone.Infrastructure.csproj" />
     <ProjectReference Include="..\MyAndroidPhone.Tools\MyAndroidPhone.Tools.csproj" />

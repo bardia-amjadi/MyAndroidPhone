@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
+using MyAndroidPhone.Android;
+using MyAndroidPhone.Core.Devices;
 using MyAndroidPhone.Core.Features;
 using MyAndroidPhone.Core.Logging;
 using MyAndroidPhone.Core.Platform;
@@ -70,6 +72,9 @@ public partial class App : Application
         services.AddSingleton<IProcessRunner, ProcessRunner>();
         services.AddSingleton<ISystemCompatibilityService, SystemCompatibilityService>();
         services.AddSingleton<IToolService, ToolService>();
+        services.AddSingleton<IAdbClient, AdbClient>();
+        services.AddSingleton<DeviceStoreService>();
+        services.AddSingleton<IDeviceService, DeviceService>();
         services.AddSingleton<IFeatureRegistry>(_ => BuiltInFeatures.CreateRegistry());
         services.AddSingleton<DiagnosticsReportBuilder>();
 
@@ -88,12 +93,14 @@ public partial class App : Application
         services.AddTransient<ToolManagerViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<DiagnosticsViewModel>();
+        services.AddTransient<DeviceCenterViewModel>();
         services.AddTransient<SetupWizardViewModel>();
         services.AddTransient<ShellView>();
         services.AddTransient<SetupWizardView>();
         services.AddTransient<ToolManagerView>();
         services.AddTransient<SettingsView>();
         services.AddTransient<DiagnosticsView>();
+        services.AddTransient<DeviceCenterView>();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -114,6 +121,7 @@ public partial class App : Application
         _window.Activate();
         _window.ShowStartup();
 
+        _services.GetRequiredService<IDeviceService>().StartMonitoring();
         _ = RefreshToolsAsync(logger);
     }
 

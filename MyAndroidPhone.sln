@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAndroidPhone.Tools", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAndroidPhone.App", "src\MyAndroidPhone.App\MyAndroidPhone.App.csproj", "{A1000000-0000-4000-8000-000000000004}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyAndroidPhone.Android", "src\MyAndroidPhone.Android\MyAndroidPhone.Android.csproj", "{A1000000-0000-4000-8000-000000000005}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,22 @@ Global
 		{A1000000-0000-4000-8000-000000000004}.Release|x86.Build.0 = Release|x86
 		{A1000000-0000-4000-8000-000000000004}.Release|ARM64.ActiveCfg = Release|ARM64
 		{A1000000-0000-4000-8000-000000000004}.Release|ARM64.Build.0 = Release|ARM64
+		{A1000000-0000-4000-8000-000000000005}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|x64.Build.0 = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|x86.Build.0 = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|x64.ActiveCfg = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|x64.Build.0 = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|x86.ActiveCfg = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|x86.Build.0 = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{A1000000-0000-4000-8000-000000000005}.Release|ARM64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

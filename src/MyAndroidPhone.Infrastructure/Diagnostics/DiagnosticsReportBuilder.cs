@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using MyAndroidPhone.Core.Devices;
 using MyAndroidPhone.Core.Logging;
 using MyAndroidPhone.Core.Platform;
 using MyAndroidPhone.Core.Settings;
@@ -19,10 +20,14 @@ public sealed class DiagnosticsReportBuilder(
     IToolService tools,
     IRecentLogSource recentLog,
     ISettingsService settings,
+    IDeviceService devices,
     AppPaths paths)
 {
     public static string ApplicationVersion =>
         Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "unknown";
+
+    private static string MaskSerial(string serial) =>
+        serial.Length <= 4 ? "****" : serial[..2] + "***" + serial[^2..];
 
     public string Build()
     {
@@ -85,7 +90,33 @@ public sealed class DiagnosticsReportBuilder(
         builder.AppendLine();
 
         builder.AppendLine("== Devices ==");
-        builder.AppendLine("Device discovery is not part of this build yet, so no device information is collected.");
+        builder.AppendLine($"Status: {devices.StatusMessage}");
+        foreach (var device in devices.Devices)
+        {
+            // Serials identify a physical device, so only a masked form is exported.
+            var hw = device.Hardware;
+            builder.Append($"{MaskSerial(device.Serial)}: {device.State}, {device.ConnectionType}");
+            if (hw is not null)
+            {
+                builder.Append($", {hw.Manufacturer} {hw.Model}, Android {hw.AndroidVersion} (API {hw.ApiLevel?.ToString() ?? "?"})");
+                if (hw.ScreenWidth is not null)
+                {
+                    builder.Append($", {hw.ScreenWidth}x{hw.ScreenHeight} @ {hw.DensityDpi} dpi");
+                }
+
+                if (hw.Battery?.Level is not null)
+                {
+                    builder.Append($", battery {hw.Battery.Level}%");
+                }
+            }
+
+            builder.AppendLine();
+            foreach (var capability in device.Capabilities.Where(c => !c.Supported))
+            {
+                builder.AppendLine($"    Unavailable: {capability.Name} - {capability.Reason}");
+            }
+        }
+
         builder.AppendLine();
 
         builder.AppendLine("== Recent errors and warnings ==");

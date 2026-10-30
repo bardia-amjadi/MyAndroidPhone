@@ -5,7 +5,8 @@ public enum SetupStep
     Welcome = 0,
     Dependencies = 1,
     Legal = 2,
-    Finish = 3
+    Device = 3,
+    Finish = 4
 }
 
 /// <summary>Persisted after every step so an unexpected shutdown resumes where the user left off.</summary>

@@ -9,6 +9,7 @@ namespace MyAndroidPhone.Desktop.Services;
 
 public static class ModuleIds
 {
+    public const string DeviceCenter = "device-center";
     public const string ToolManager = "tool-manager";
     public const string Settings = "settings";
     public const string Diagnostics = "diagnostics";
@@ -23,6 +24,16 @@ public static class BuiltInFeatures
     public static IFeatureRegistry CreateRegistry()
     {
         var registry = new FeatureRegistry();
+
+        registry.Register(new FeatureDescriptor(
+            ModuleIds.DeviceCenter,
+            "Device Center",
+            "See connected Android devices, connect over USB or Wi-Fi, and name them.",
+            "\uE8EA",
+            60,
+            Array.Empty<ToolId>(),
+            Array.Empty<string>(),
+            new[] { "List devices", "Pair and connect wirelessly", "Switch USB device to Wi-Fi", "Rename and recolor devices" }));
 
         registry.Register(new FeatureDescriptor(
             ModuleIds.ToolManager,
@@ -67,6 +78,7 @@ public sealed class ModuleViewFactory
     {
         _entries = new Dictionary<string, (Func<FrameworkElement>, Size)>
         {
+            [ModuleIds.DeviceCenter] = (() => services.GetRequiredService<DeviceCenterView>(), new Size(940, 640)),
             [ModuleIds.ToolManager] = (() => services.GetRequiredService<ToolManagerView>(), new Size(780, 580)),
             [ModuleIds.Settings] = (() => services.GetRequiredService<SettingsView>(), new Size(680, 600)),
             [ModuleIds.Diagnostics] = (() => services.GetRequiredService<DiagnosticsView>(), new Size(860, 600))

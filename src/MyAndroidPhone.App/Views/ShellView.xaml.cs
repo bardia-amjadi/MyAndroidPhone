@@ -226,6 +226,8 @@ public sealed partial class ShellView : UserControl
         }
     }
 
+    private void OnOpenDeviceCenter(object sender, RoutedEventArgs e) => ViewModel.RequestOpen(ModuleIds.DeviceCenter);
+
     private void OnRerunSetup(object sender, RoutedEventArgs e) => ViewModel.RequestSetupRerun();
 
     private void OnExit(object sender, RoutedEventArgs e) => Application.Current.Exit();

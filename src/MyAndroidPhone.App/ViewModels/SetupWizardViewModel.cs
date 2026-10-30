@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using MyAndroidPhone.Core.Devices;
 using MyAndroidPhone.Core.Legal;
 using MyAndroidPhone.Core.Platform;
 using MyAndroidPhone.Core.Settings;
@@ -25,12 +26,14 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
         "Welcome",
         "Android tools",
         "License and security notice",
+        "Connect a device",
         "All set"
     };
 
     private readonly ISetupStateService _setup;
     private readonly IToolService _tools;
     private readonly ToolActions _actions;
+    private readonly IDeviceService _deviceService;
     private readonly IUiDispatcher _ui;
     private readonly INotificationService _notifications;
     private readonly ILogger<SetupWizardViewModel> _logger;
@@ -40,6 +43,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
         ISetupStateService setup,
         IToolService tools,
         ToolActions actions,
+        IDeviceService deviceService,
         ISystemCompatibilityService compatibility,
         IUiDispatcher ui,
         INotificationService notifications,
@@ -48,6 +52,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
         _setup = setup;
         _tools = tools;
         _actions = actions;
+        _deviceService = deviceService;
         _ui = ui;
         _notifications = notifications;
         _logger = logger;
@@ -67,7 +72,10 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
         _stepIndex = state.Completed ? (int)SetupStep.Legal : Math.Clamp((int)state.CurrentStep, 0, LastStep);
 
         _tools.Changed += OnToolsChanged;
+        _deviceService.Changed += OnDevicesChanged;
+        _deviceStatus = string.Empty;
         RebuildTools();
+        RebuildDevices();
         _initialized = true;
 
         if (_stepIndex == (int)SetupStep.Dependencies)
@@ -81,6 +89,11 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
     public ObservableCollection<ToolItemViewModel> ToolItems { get; } = new();
 
     public ObservableCollection<NoticeViewModel> Notices { get; } = new();
+
+    public ObservableCollection<DeviceItemViewModel> Devices { get; } = new();
+
+    [ObservableProperty]
+    private string _deviceStatus;
 
     public string CompatibilityText { get; }
 
@@ -107,7 +120,7 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
 
     public bool CanGoBack => StepIndex > 0;
 
-    public bool ShowNext => StepIndex < (int)SetupStep.Legal;
+    public bool ShowNext => StepIndex < (int)SetupStep.Legal || StepIndex == (int)SetupStep.Device;
 
     public bool ShowAccept => StepIndex == (int)SetupStep.Legal;
 
@@ -123,7 +136,11 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
                 ToolStatus.Invalid => $"{i.Definition.ShortName}: needs attention",
                 _ => $"{i.Definition.ShortName}: not found - features that need it will tell you what is missing"
             });
-            return string.Join(Environment.NewLine, lines);
+            var ready = _deviceService.Devices.Count(d => d.IsOnline);
+            var deviceLine = ready > 0
+                ? $"Devices: {ready} ready"
+                : "Devices: none connected yet - connect one any time from Device Center";
+            return string.Join(Environment.NewLine, lines.Append(deviceLine));
         }
     }
 
@@ -169,9 +186,9 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
             {
                 s.AcceptedNoticesVersion = LegalNotices.Version;
                 s.AcceptedAt = DateTimeOffset.Now;
-                s.CurrentStep = SetupStep.Finish;
+                s.CurrentStep = SetupStep.Device;
             });
-            StepIndex = LastStep;
+            StepIndex = (int)SetupStep.Device;
         }
         catch (Exception ex)
         {
@@ -218,7 +235,42 @@ public sealed partial class SetupWizardViewModel : ObservableObject, IDisposable
         }
     }
 
-    public void Dispose() => _tools.Changed -= OnToolsChanged;
+    [RelayCommand]
+    private async Task RefreshDevicesAsync()
+    {
+        try
+        {
+            await _deviceService.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Device refresh failed during setup.");
+            _notifications.Post(NotificationSeverity.Error, "Could not check for devices", ex.Message);
+        }
+    }
+
+    public void Dispose()
+    {
+        _tools.Changed -= OnToolsChanged;
+        _deviceService.Changed -= OnDevicesChanged;
+    }
+
+    private void OnDevicesChanged(object? sender, EventArgs e) => _ui.Post(() =>
+    {
+        RebuildDevices();
+        OnPropertyChanged(nameof(FinishSummary));
+    });
+
+    private void RebuildDevices()
+    {
+        Devices.Clear();
+        foreach (var device in _deviceService.Devices)
+        {
+            Devices.Add(new DeviceItemViewModel(device));
+        }
+
+        DeviceStatus = Devices.Count == 0 ? _deviceService.StatusMessage : $"{Devices.Count(d => d.Device.IsOnline)} of {Devices.Count} device(s) ready";
+    }
 
     private async Task SaveStepAsync(int step)
     {

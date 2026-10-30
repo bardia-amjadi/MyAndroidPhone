@@ -31,7 +31,7 @@
             </MenuBarItem>
         </MenuBar>
 
-        <!-- Device and tool status -->
+        <!-- Device selector and tool status -->
         <Border Grid.Row="1" Padding="16,8" CornerRadius="10" Margin="12,4,12,0"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
@@ -39,13 +39,24 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE8EA;" FontSize="16" />
-                    <TextBlock Text="No device connected. Device discovery is not implemented in this version." VerticalAlignment="Center" />
+                    <FontIcon Glyph="&#xE8EA;" FontSize="16" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{x:Bind ViewModel.Devices}" SelectedItem="{x:Bind ViewModel.SelectedDevice, Mode=TwoWay}"
+                              PlaceholderText="No device" MinWidth="300" AutomationProperties.Name="Target device">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DeviceItemViewModel">
+                                <TextBlock Text="{x:Bind Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Button Content="Device Center" Click="OnOpenDeviceCenter" />
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ToolSummary, Mode=OneWay}" HorizontalAlignment="Right"
-                           VerticalAlignment="Center" Opacity="0.8" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.DeviceStatus, Mode=OneWay}" VerticalAlignment="Center"
+                           Opacity="0.8" TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.ToolSummary, Mode=OneWay}" VerticalAlignment="Center"
+                           Opacity="0.7" TextTrimming="CharacterEllipsis" MaxWidth="360" />
             </Grid>
         </Border>
 

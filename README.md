@@ -2,7 +2,7 @@
 
 A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecting to and managing Android devices through Android Debug Bridge (adb).
 
-> **Status: early foundation (Stage 1 of 7).** The desktop shell, first-run wizard, tool detection, settings and diagnostics exist. **Device connectivity, file transfer, screen mirroring and app management are not implemented yet.** The UI does not show controls for them.
+> **Status: early (Stage 2 of 7).** The desktop shell, first-run wizard, tool detection, settings, diagnostics and **adb device discovery (USB and Wi-Fi)** exist. **File transfer, screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
 
 ## Current implementation status
 
@@ -13,10 +13,11 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 | Desktop shell (menu bar, floating module windows, Dock, notifications) | Implemented | XAML checked for well-formedness only. **Not compiled or run.** |
 | Tool Manager (detect, verify, select adb/scrcpy) | Implemented (no install/update/remove) | Detection, version parsing and validation exercised against stand-in `adb`/`scrcpy` scripts on Linux. Not run against real adb/scrcpy. |
 | Settings (application) | Implemented: theme, Dock labels, log options, reset | Persistence exercised on Linux. UI not run. |
-| Settings (device) | Not implemented | Needs device connectivity. |
+| Device Center (list, rename, icon, accent color, pair, connect, switch to Wi-Fi) | Implemented | Service logic tested on Linux; **UI not compiled or run.** Names, icons, colors and last selection persist in `devices.json`. |
+| Settings (device) | Not implemented | Device settings and display configuration commands are not built yet. |
 | Logs and Diagnostics (view, redacted export) | Implemented | Report builder and rotating logger exercised on Linux. UI not run. |
-| USB connection | **Not implemented** | |
-| Wireless connection | **Not implemented** | |
+| USB connection (discovery, authorization states, details, guidance) | Implemented | Parsing, state handling and per-device targeting exercised against a fake adb on Linux. **Not tested with a real phone or on Windows.** |
+| Wireless connection (pair with code, connect, adb tcpip, disconnect) | Implemented | Exercised against a fake adb only, including adb's exit-0 failures. **Not tested with a real phone.** No network scanning is performed. |
 | File Explorer | **Not implemented** | |
 | Live Run (scrcpy) | **Not implemented** | |
 | App Manager | **Not implemented** | |
@@ -27,7 +28,7 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 ### What was actually verified
 
 - `Core`, `Infrastructure` and `Tools` compile on .NET 8 with warnings as errors (on Linux).
-- A throwaway console harness ran 43 checks against that code and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry. The harness is not part of the repository.
+- A throwaway console harness ran 99 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking. The harness is not part of the repository.
 - Not verified: the WinUI 3 app project (needs Windows to build), MSIX packaging, behaviour with real adb, scrcpy or Android devices, and the minimum Windows build below.
 
 ## System requirements
@@ -97,7 +98,8 @@ Everything is local. No telemetry, no uploads. Logs are redacted for secret-look
 
 ## Known limitations
 
-- No device features yet (see status table).
+- Only device discovery and connection exist so far (see status table). IPv6 addresses are not accepted for wireless connect. Device operations are not yet queued per device beyond one lock per device.
+- Device details (battery, screen) refresh every 30 seconds; the device list polls adb every 3 seconds.
 - Tool installation and updates are manual.
 - Language infrastructure is not implemented; UI text is English only.
 - Window size and position are not persisted.
