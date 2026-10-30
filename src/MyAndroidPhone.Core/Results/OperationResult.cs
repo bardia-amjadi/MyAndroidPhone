@@ -5,6 +5,7 @@ public enum ErrorKind
     InvalidInput,
     NotFound,
     Unsupported,
+    AccessDenied,
     Cancelled,
     Timeout,
     ProcessFailure,

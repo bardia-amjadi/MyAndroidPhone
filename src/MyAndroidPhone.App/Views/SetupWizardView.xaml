@@ -26,7 +26,7 @@
                     <TextBlock TextWrapping="Wrap"
                                Text="My Android Phone connects to Android devices from Windows through Android Debug Bridge (adb). This setup checks the tools it depends on and shows the notices you need to accept." />
                     <TextBlock TextWrapping="Wrap"
-                               Text="This version provides the desktop shell, tool detection and selection, device discovery over USB and Wi-Fi, settings and diagnostics. File transfer, screen mirroring and app management are not available yet, and nothing in this application pretends otherwise." />
+                               Text="This version provides the desktop shell, tool detection and selection, device discovery over USB and Wi-Fi, a File Explorer with file transfers, settings and diagnostics. Screen mirroring and app management are not available yet, and nothing in this application pretends otherwise." />
                     <TextBlock Text="This computer" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
                     <TextBlock Text="{x:Bind ViewModel.CompatibilityText}" />
                     <InfoBar IsOpen="{x:Bind ViewModel.HasCompatibilityIssues}" IsClosable="False" Severity="Warning"

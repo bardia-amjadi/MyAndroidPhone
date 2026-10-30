@@ -12,6 +12,8 @@ public static class Converters
 
     public static Visibility StepVisibility(int current, int step) => current == step ? Visibility.Visible : Visibility.Collapsed;
 
+    public static string SecondaryHeader(bool searching) => searching ? "Location" : "Permissions";
+
     public static double ToOpacity(bool value) => value ? 1.0 : 0.0;
 
     public static bool IsTheme(AppTheme theme, string name) =>

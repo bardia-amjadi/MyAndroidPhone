@@ -1,0 +1,167 @@
+<UserControl
+    x:Class="MyAndroidPhone.Desktop.Views.FileExplorerView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MyAndroidPhone.Desktop.ViewModels"
+    xmlns:h="using:MyAndroidPhone.Desktop.Helpers">
+
+    <Grid Padding="12" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- No device -->
+        <StackPanel Grid.RowSpan="5" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.NoDevice), Mode=OneWay}">
+            <FontIcon Glyph="&#xE8EA;" FontSize="40" Opacity="0.6" />
+            <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="420" />
+        </StackPanel>
+
+        <!-- Toolbar -->
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" IsOpen="False" Background="Transparent"
+                    Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.HasDevice), Mode=OneWay}">
+            <AppBarButton Icon="Back" Label="Back" Command="{x:Bind ViewModel.GoBackCommand}" IsEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}" />
+            <AppBarButton Icon="Forward" Label="Forward" Command="{x:Bind ViewModel.GoForwardCommand}" IsEnabled="{x:Bind ViewModel.CanGoForward, Mode=OneWay}" />
+            <AppBarButton Icon="Up" Label="Up" Command="{x:Bind ViewModel.GoUpCommand}" IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}" />
+            <AppBarButton Icon="Refresh" Label="Refresh" Command="{x:Bind ViewModel.RefreshCommand}" />
+            <AppBarSeparator />
+            <AppBarButton Icon="NewFolder" Label="New folder" Command="{x:Bind ViewModel.NewFolderCommand}" />
+            <AppBarButton Icon="Upload" Label="Send files" Command="{x:Bind ViewModel.UploadFilesCommand}" />
+            <AppBarButton Icon="Download" Label="Save to PC" Command="{x:Bind ViewModel.DownloadCommand}" />
+            <AppBarButton Icon="Delete" Label="Delete" Command="{x:Bind ViewModel.DeleteCommand}" />
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Icon="Upload" Label="Send a folder" Command="{x:Bind ViewModel.UploadFolderCommand}" />
+                <AppBarButton Icon="Rename" Label="Rename" Command="{x:Bind ViewModel.RenameCommand}" />
+                <AppBarButton Icon="Copy" Label="Copy" Command="{x:Bind ViewModel.CopyCommand}" />
+                <AppBarButton Icon="Cut" Label="Cut" Command="{x:Bind ViewModel.CutCommand}" />
+                <AppBarButton Icon="Paste" Label="Paste" Command="{x:Bind ViewModel.PasteCommand}" />
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+
+        <!-- Breadcrumbs, filter, search -->
+        <Grid Grid.Row="1" ColumnSpacing="8" Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.HasDevice), Mode=OneWay}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="220" />
+            </Grid.ColumnDefinitions>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.Breadcrumbs}" AutomationProperties.Name="Path">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:BreadcrumbItem">
+                            <StackPanel Orientation="Horizontal">
+                                <HyperlinkButton Content="{x:Bind Name}" Tag="{x:Bind Path}" Click="OnBreadcrumbClick" Padding="6,2" />
+                                <TextBlock Text="/" VerticalAlignment="Center" Opacity="0.5" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+            <TextBox Grid.Column="1" PlaceholderText="Filter this folder" Text="{x:Bind ViewModel.FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     AutomationProperties.Name="Filter this folder" />
+            <TextBox Grid.Column="2" x:Name="SearchBox" PlaceholderText="Search in this folder and below" Text="{x:Bind ViewModel.SearchText, Mode=TwoWay}"
+                     KeyDown="OnSearchKeyDown" AutomationProperties.Name="Search" />
+        </Grid>
+
+        <InfoBar Grid.Row="2" IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}" IsClosable="False" Severity="Error"
+                 Title="Could not complete" Message="{x:Bind ViewModel.ErrorText, Mode=OneWay}" />
+
+        <Grid Grid.Row="3" ColumnSpacing="10" Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.HasDevice), Mode=OneWay}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="190" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <ListView ItemsSource="{x:Bind ViewModel.Locations}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnLocationClick"
+                      AutomationProperties.Name="Locations">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LocationItem">
+                        <StackPanel Orientation="Horizontal" Spacing="8" Padding="0,4">
+                            <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" />
+                            <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <Grid Grid.Column="1" RowSpacing="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <InfoBar IsOpen="{x:Bind ViewModel.HasWarning, Mode=OneWay}" IsClosable="False" Severity="Warning" Message="{x:Bind ViewModel.WarningText, Mode=OneWay}" />
+
+                <!-- Column headers -->
+                <Grid Grid.Row="1" ColumnSpacing="8" Padding="40,0,12,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="90" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="150" />
+                    </Grid.ColumnDefinitions>
+                    <HyperlinkButton Content="Name" Tag="Name" Click="OnSortClick" Padding="0" />
+                    <HyperlinkButton Grid.Column="1" Content="Size" Tag="Size" Click="OnSortClick" Padding="0" />
+                    <HyperlinkButton Grid.Column="2" Content="Modified" Tag="Modified" Click="OnSortClick" Padding="0" />
+                    <TextBlock Grid.Column="3" Text="{x:Bind h:Converters.SecondaryHeader(ViewModel.ShowLocationColumn), Mode=OneWay}" VerticalAlignment="Center" Opacity="0.7" />
+                </Grid>
+
+                <ListView Grid.Row="2" x:Name="FileList" ItemsSource="{x:Bind ViewModel.Entries}" SelectionMode="Extended"
+                          IsDoubleTapEnabled="True" DoubleTapped="OnListDoubleTapped" SelectionChanged="OnSelectionChanged"
+                          CanDragItems="True" DragItemsStarting="OnDragItemsStarting" AllowDrop="True" DragOver="OnDragOver" Drop="OnDrop"
+                          AutomationProperties.Name="Files">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FileEntryViewModel">
+                            <Grid ColumnSpacing="8" Padding="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="150" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Glyph="{x:Bind Glyph}" FontSize="16" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind SizeText}" Opacity="0.8" />
+                                <TextBlock Grid.Column="3" Text="{x:Bind ModifiedText}" Opacity="0.8" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="4" Text="{x:Bind SecondaryText}" Opacity="0.6" TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="Save to this PC" Command="{x:Bind ViewModel.DownloadCommand}" />
+                            <MenuFlyoutItem Text="Copy" Command="{x:Bind ViewModel.CopyCommand}" />
+                            <MenuFlyoutItem Text="Cut" Command="{x:Bind ViewModel.CutCommand}" />
+                            <MenuFlyoutItem Text="Paste" Command="{x:Bind ViewModel.PasteCommand}" />
+                            <MenuFlyoutSeparator />
+                            <MenuFlyoutItem Text="Rename" Command="{x:Bind ViewModel.RenameCommand}" />
+                            <MenuFlyoutItem Text="Delete" Command="{x:Bind ViewModel.DeleteCommand}" />
+                            <MenuFlyoutItem Text="New folder" Command="{x:Bind ViewModel.NewFolderCommand}" />
+                        </MenuFlyout>
+                    </ListView.ContextFlyout>
+                </ListView>
+                <ProgressRing Grid.Row="2" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center"
+                              IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+            </Grid>
+        </Grid>
+
+        <!-- Status -->
+        <StackPanel Grid.Row="4" Spacing="2" Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.HasDevice), Mode=OneWay}">
+            <TextBlock Text="{x:Bind ViewModel.AreaText, Mode=OneWay}" TextWrapping="Wrap" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis">
+                <Run Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" /><Run Text="   " /><Run Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" />
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</UserControl>

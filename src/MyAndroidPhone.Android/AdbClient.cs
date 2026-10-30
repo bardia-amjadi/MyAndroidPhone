@@ -6,8 +6,21 @@ using MyAndroidPhone.Core.Tools;
 
 namespace MyAndroidPhone.Android;
 
+/// <summary>The raw outcome of a device command. A non-zero exit code is data here, not an error: callers decide what it means.</summary>
+public sealed record AdbCommandOutput(int ExitCode, string StandardOutput, string StandardError)
+{
+    public string Combined => (StandardOutput + Environment.NewLine + StandardError).Trim();
+}
+
 public interface IAdbClient
 {
+    /// <summary>Runs one shell command on the device. The command string must already be safely quoted.</summary>
+    Task<OperationResult<AdbCommandOutput>> ShellAsync(string serial, string command, TimeSpan timeout, CancellationToken cancellationToken);
+
+    Task<OperationResult<AdbCommandOutput>> PullAsync(string serial, string remotePath, string localPath, CancellationToken cancellationToken);
+
+    Task<OperationResult<AdbCommandOutput>> PushAsync(string serial, string localPath, string remotePath, CancellationToken cancellationToken);
+
     Task<OperationResult<IReadOnlyList<AdbDeviceEntry>>> ListDevicesAsync(CancellationToken cancellationToken);
 
     Task<OperationResult<DeviceHardware>> ReadHardwareAsync(string serial, CancellationToken cancellationToken);
@@ -50,6 +63,63 @@ public sealed class AdbClient(IProcessRunner runner, IToolService tools, ILogger
         var text = run.Value.StandardOutput + Environment.NewLine + run.Value.StandardError;
         return OperationResult<IReadOnlyList<AdbDeviceEntry>>.Success(AdbOutputParser.ParseDevices(text));
     }
+
+    public async Task<OperationResult<AdbCommandOutput>> ShellAsync(string serial, string command, TimeSpan timeout, CancellationToken cancellationToken)
+    {
+        var valid = InputValidator.ValidateSerial(serial);
+        if (!valid.Succeeded)
+        {
+            return OperationResult<AdbCommandOutput>.Failure(valid.Error!);
+        }
+
+        if (string.IsNullOrWhiteSpace(command) || command.Contains('\0'))
+        {
+            return OperationResult<AdbCommandOutput>.Failure(ErrorKind.InvalidInput, "Invalid device command.");
+        }
+
+        var run = await RunAsync(DeviceArgs(serial, "shell", command), timeout, null, cancellationToken, allowNonZeroExit: true).ConfigureAwait(false);
+        return ToOutput(run);
+    }
+
+    public async Task<OperationResult<AdbCommandOutput>> PullAsync(string serial, string remotePath, string localPath, CancellationToken cancellationToken)
+    {
+        var valid = InputValidator.ValidateSerial(serial);
+        if (!valid.Succeeded)
+        {
+            return OperationResult<AdbCommandOutput>.Failure(valid.Error!);
+        }
+
+        if (!remotePath.StartsWith('/') || !Path.IsPathFullyQualified(localPath))
+        {
+            return OperationResult<AdbCommandOutput>.Failure(ErrorKind.InvalidInput, "Transfers need a full device path and a full local path.");
+        }
+
+        // Pull/push use the sync protocol: paths are never interpreted by a shell, so no quoting is needed or wanted.
+        var run = await RunAsync(DeviceArgs(serial, "pull", remotePath, localPath), null, null, cancellationToken, allowNonZeroExit: true).ConfigureAwait(false);
+        return ToOutput(run);
+    }
+
+    public async Task<OperationResult<AdbCommandOutput>> PushAsync(string serial, string localPath, string remotePath, CancellationToken cancellationToken)
+    {
+        var valid = InputValidator.ValidateSerial(serial);
+        if (!valid.Succeeded)
+        {
+            return OperationResult<AdbCommandOutput>.Failure(valid.Error!);
+        }
+
+        if (!remotePath.StartsWith('/') || !Path.IsPathFullyQualified(localPath))
+        {
+            return OperationResult<AdbCommandOutput>.Failure(ErrorKind.InvalidInput, "Transfers need a full device path and a full local path.");
+        }
+
+        var run = await RunAsync(DeviceArgs(serial, "push", localPath, remotePath), null, null, cancellationToken, allowNonZeroExit: true).ConfigureAwait(false);
+        return ToOutput(run);
+    }
+
+    private static OperationResult<AdbCommandOutput> ToOutput(OperationResult<ProcessRunResult> run) =>
+        run.Succeeded
+            ? OperationResult<AdbCommandOutput>.Success(new AdbCommandOutput(run.Value.ExitCode ?? -1, run.Value.StandardOutput, run.Value.StandardError))
+            : OperationResult<AdbCommandOutput>.Failure(run.Error!);
 
     public async Task<OperationResult<DeviceHardware>> ReadHardwareAsync(string serial, CancellationToken cancellationToken)
     {
@@ -204,9 +274,10 @@ public sealed class AdbClient(IProcessRunner runner, IToolService tools, ILogger
 
     private async Task<OperationResult<ProcessRunResult>> RunAsync(
         string[] arguments,
-        TimeSpan timeout,
+        TimeSpan? timeout,
         IReadOnlyCollection<int>? sensitive,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool allowNonZeroExit = false)
     {
         var adb = tools.Get(ToolId.Adb);
         if (!adb.IsUsable || adb.ExecutablePath is null)
@@ -225,7 +296,7 @@ public sealed class AdbClient(IProcessRunner runner, IToolService tools, ILogger
         switch (result.Status)
         {
             case ProcessRunStatus.Completed:
-                if (result.ExitCode == 0)
+                if (result.ExitCode == 0 || allowNonZeroExit)
                 {
                     return OperationResult<ProcessRunResult>.Success(result);
                 }

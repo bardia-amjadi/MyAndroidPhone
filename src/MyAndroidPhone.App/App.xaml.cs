@@ -4,11 +4,13 @@ using Microsoft.UI.Xaml;
 using MyAndroidPhone.Android;
 using MyAndroidPhone.Core.Devices;
 using MyAndroidPhone.Core.Features;
+using MyAndroidPhone.Core.Files;
 using MyAndroidPhone.Core.Logging;
 using MyAndroidPhone.Core.Platform;
 using MyAndroidPhone.Core.Processes;
 using MyAndroidPhone.Core.Settings;
 using MyAndroidPhone.Core.Tools;
+using MyAndroidPhone.Core.Transfers;
 using MyAndroidPhone.Desktop.Services;
 using MyAndroidPhone.Desktop.ViewModels;
 using MyAndroidPhone.Desktop.Views;
@@ -75,6 +77,8 @@ public partial class App : Application
         services.AddSingleton<IAdbClient, AdbClient>();
         services.AddSingleton<DeviceStoreService>();
         services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<IFileExplorerService, FileExplorerService>();
+        services.AddSingleton<ITransferService, TransferService>();
         services.AddSingleton<IFeatureRegistry>(_ => BuiltInFeatures.CreateRegistry());
         services.AddSingleton<DiagnosticsReportBuilder>();
 
@@ -94,6 +98,8 @@ public partial class App : Application
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<DiagnosticsViewModel>();
         services.AddTransient<DeviceCenterViewModel>();
+        services.AddTransient<FileExplorerViewModel>();
+        services.AddTransient<TransferCenterViewModel>();
         services.AddTransient<SetupWizardViewModel>();
         services.AddTransient<ShellView>();
         services.AddTransient<SetupWizardView>();
@@ -101,6 +107,8 @@ public partial class App : Application
         services.AddTransient<SettingsView>();
         services.AddTransient<DiagnosticsView>();
         services.AddTransient<DeviceCenterView>();
+        services.AddTransient<FileExplorerView>();
+        services.AddTransient<TransferCenterView>();
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)

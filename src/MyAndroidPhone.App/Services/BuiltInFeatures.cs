@@ -9,6 +9,8 @@ namespace MyAndroidPhone.Desktop.Services;
 
 public static class ModuleIds
 {
+    public const string FileExplorer = "file-explorer";
+    public const string TransferCenter = "transfer-center";
     public const string DeviceCenter = "device-center";
     public const string ToolManager = "tool-manager";
     public const string Settings = "settings";
@@ -16,14 +18,34 @@ public static class ModuleIds
 }
 
 /// <summary>
-/// The features that exist in this build. Dock order slots reserved for later modules: File Explorer 10, Run 20,
-/// App Manager 40, Device Center 60, Transfer Center 70. They are registered only when they are implemented.
+/// The features that exist in this build. Dock order slots: File Explorer 10, Run 20 (not yet implemented),
+/// App Manager 40 (not yet implemented), Device Center 60, Transfer Center 70. A feature is registered only when it is implemented.
 /// </summary>
 public static class BuiltInFeatures
 {
     public static IFeatureRegistry CreateRegistry()
     {
         var registry = new FeatureRegistry();
+
+        registry.Register(new FeatureDescriptor(
+            ModuleIds.FileExplorer,
+            "File Explorer",
+            "Browse the selected phone's files, copy them to and from this PC, and organize them.",
+            "\uE8B7",
+            10,
+            new[] { ToolId.Adb },
+            Array.Empty<string>(),
+            new[] { "Browse", "Search", "Send files and folders", "Save to PC", "Copy, move, rename, delete", "Drag and drop" }));
+
+        registry.Register(new FeatureDescriptor(
+            ModuleIds.TransferCenter,
+            "Transfer Center",
+            "Queued, running and finished file transfers, with progress and per-file errors.",
+            "\uE8AB",
+            70,
+            Array.Empty<ToolId>(),
+            Array.Empty<string>(),
+            new[] { "Cancel", "Retry", "Open destination" }));
 
         registry.Register(new FeatureDescriptor(
             ModuleIds.DeviceCenter,
@@ -78,6 +100,8 @@ public sealed class ModuleViewFactory
     {
         _entries = new Dictionary<string, (Func<FrameworkElement>, Size)>
         {
+            [ModuleIds.FileExplorer] = (() => services.GetRequiredService<FileExplorerView>(), new Size(1020, 640)),
+            [ModuleIds.TransferCenter] = (() => services.GetRequiredService<TransferCenterView>(), new Size(720, 520)),
             [ModuleIds.DeviceCenter] = (() => services.GetRequiredService<DeviceCenterView>(), new Size(940, 640)),
             [ModuleIds.ToolManager] = (() => services.GetRequiredService<ToolManagerView>(), new Size(780, 580)),
             [ModuleIds.Settings] = (() => services.GetRequiredService<SettingsView>(), new Size(680, 600)),

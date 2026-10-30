@@ -102,6 +102,12 @@ public interface IFilePickerService
 
     /// <summary>Lets the user choose where to save a file. Returns null when cancelled.</summary>
     Task<string?> PickSaveFileAsync(string suggestedFileName, string fileTypeDescription, string extension);
+
+    /// <summary>Lets the user choose a folder on this computer. Returns null when cancelled.</summary>
+    Task<string?> PickFolderAsync();
+
+    /// <summary>Lets the user choose one or more files on this computer. Returns an empty list when cancelled.</summary>
+    Task<IReadOnlyList<string>> PickFilesAsync();
 }
 
 public sealed class FilePickerService(WindowContext window) : IFilePickerService
@@ -124,6 +130,36 @@ public sealed class FilePickerService(WindowContext window) : IFilePickerService
 
         var file = await picker.PickSingleFileAsync();
         return file?.Path;
+    }
+
+    public async Task<string?> PickFolderAsync()
+    {
+        var handle = window.Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.Downloads };
+        picker.FileTypeFilter.Add("*");
+        InitializeWithWindow.Initialize(picker, handle);
+        var folder = await picker.PickSingleFolderAsync();
+        return folder?.Path;
+    }
+
+    public async Task<IReadOnlyList<string>> PickFilesAsync()
+    {
+        var handle = window.Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return Array.Empty<string>();
+        }
+
+        var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder, ViewMode = PickerViewMode.List };
+        picker.FileTypeFilter.Add("*");
+        InitializeWithWindow.Initialize(picker, handle);
+        var files = await picker.PickMultipleFilesAsync();
+        return files.Select(f => f.Path).ToList();
     }
 
     public async Task<string?> PickSaveFileAsync(string suggestedFileName, string fileTypeDescription, string extension)

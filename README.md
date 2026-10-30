@@ -2,7 +2,7 @@
 
 A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecting to and managing Android devices through Android Debug Bridge (adb).
 
-> **Status: early (Stage 2 of 7).** The desktop shell, first-run wizard, tool detection, settings, diagnostics and **adb device discovery (USB and Wi-Fi)** exist. **File transfer, screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
+> **Status: early (Stage 3 of 7).** The desktop shell, first-run wizard, tool detection, settings, diagnostics, **adb device discovery (USB and Wi-Fi)**, a **File Explorer** and a **Transfer Center** exist. **Screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
 
 ## Current implementation status
 
@@ -18,17 +18,17 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 | Logs and Diagnostics (view, redacted export) | Implemented | Report builder and rotating logger exercised on Linux. UI not run. |
 | USB connection (discovery, authorization states, details, guidance) | Implemented | Parsing, state handling and per-device targeting exercised against a fake adb on Linux. **Not tested with a real phone or on Windows.** |
 | Wireless connection (pair with code, connect, adb tcpip, disconnect) | Implemented | Exercised against a fake adb only, including adb's exit-0 failures. **Not tested with a real phone.** No network scanning is performed. |
-| File Explorer | **Not implemented** | |
+| File Explorer (browse, breadcrumbs, locations, sort, filter, recursive search, new folder, rename, delete, copy/cut/paste on the device, send/save with conflict choices, drag in and drag out) | Implemented | Path rules, `ls` parsing, storage classification, every operation and the transfer engine exercised against a fake `adb` backed by a real folder on Linux (77 checks). **WinUI views, drag and drop and dialogs not compiled or run. Not tested with a real phone.** |
 | Live Run (scrcpy) | **Not implemented** | |
 | App Manager | **Not implemented** | |
-| Transfer Center | **Not implemented** | |
+| Transfer Center (queue, progress, cancel, retry, per-file errors, open folder) | Implemented | Queueing (one transfer per device, two overall), cancel, retry, conflict policies and failures tested on Linux with a fake `adb`. Upload progress advances per finished file (adb gives no byte progress through a pipe). **UI not run.** |
 | Release packaging | In progress | Project is configured for MSIX and unpackaged publish; **no package has been built.** |
 | GitHub Actions build | Written, **never run** | Treat as unverified until a run succeeds. |
 
 ### What was actually verified
 
-- `Core`, `Infrastructure` and `Tools` compile on .NET 8 with warnings as errors (on Linux).
-- A throwaway console harness ran 99 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking. The harness is not part of the repository.
+- `Core`, `Infrastructure`, `Tools` and `Android` compile on .NET 8 with warnings as errors (on Linux).
+- A throwaway console harness ran 176 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking, device path and shell-quoting rules (including hostile names), storage classification, file operations and transfers. The harness is not part of the repository.
 - Not verified: the WinUI 3 app project (needs Windows to build), MSIX packaging, behaviour with real adb, scrcpy or Android devices, and the minimum Windows build below.
 
 ## System requirements
@@ -66,9 +66,10 @@ The workflow in `.github/workflows/build.yml` builds x64 and ARM64 on `windows-2
 | `MyAndroidPhone.Core` | Models, interfaces, results, feature descriptors, legal notices. No package dependencies. |
 | `MyAndroidPhone.Infrastructure` | JSON persistence, rotating redacting logger, process runner, OS checks, diagnostics. |
 | `MyAndroidPhone.Tools` | Tool detection, version parsing and validation. |
+| `MyAndroidPhone.Android` | adb integration: device discovery and connection, file operations, transfers. |
 | `MyAndroidPhone.App` | WinUI 3 shell, wizard, view models, DI composition. |
 
-Further feature projects (device, file explorer, run, app manager, transfer center) are added when their stage is implemented, not before.
+Further features (run, app manager) are added when their stage is implemented, not before.
 
 ### Adding a feature
 
@@ -98,9 +99,14 @@ Everything is local. No telemetry, no uploads. Logs are redacted for secret-look
 
 ## Known limitations
 
-- Only device discovery and connection exist so far (see status table). IPv6 addresses are not accepted for wireless connect. Device operations are not yet queued per device beyond one lock per device.
+- Device discovery, connection and file transfer exist (see status table). IPv6 addresses are not accepted for wireless connect. Device operations are not yet queued per device beyond one lock per device.
 - Device details (battery, screen) refresh every 30 seconds; the device list polls adb every 3 seconds.
 - Tool installation and updates are manual.
+- File Explorer works through the adb shell and never uses root. Android's own rules apply: `/data` (other apps' private data) cannot be read, system partitions are shown read-only, and writes there are refused with an explanation. Files in `Android/data` may be listable only on some Android versions.
+- Transfers are not resumable. Retry skips files that already arrived. Upload progress is per file, not per byte. Symbolic links and junctions on the PC are not followed. Copying between two phones is not supported.
+- Overwriting a folder with a same-named folder is refused (choose Keep both or Skip); only files are replaced.
+- File names that Windows cannot store (`:`, `*`, reserved names) are saved with `_` substituted.
+- Dragging files out to Windows Explorer downloads them to a temporary folder first (cleaned after a day).
 - Language infrastructure is not implemented; UI text is English only.
 - Window size and position are not persisted.
 - Keyboard navigation and accessibility have not been audited; the Dock buttons and close buttons carry automation names.
