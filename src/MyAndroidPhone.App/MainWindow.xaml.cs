@@ -1,15 +1,13 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
-using MyAndroidPhone.Core.Legal;
-using MyAndroidPhone.Core.Settings;
+using MyAndroidPhone.Core.Instances;
 using MyAndroidPhone.Desktop.Services;
-using MyAndroidPhone.Desktop.ViewModels;
 using MyAndroidPhone.Desktop.Views;
 
 namespace MyAndroidPhone.Desktop;
 
-/// <summary>Hosts either the first-run wizard or the desktop shell. It contains no business logic.</summary>
+/// <summary>Hosts either the start screen (list of instances) or the desktop of one instance. It contains no business logic.</summary>
 public sealed partial class MainWindow : Window
 {
     private readonly IServiceProvider _services;
@@ -34,31 +32,22 @@ public sealed partial class MainWindow : Window
         _services.GetRequiredService<ThemeService>().Attach(RootGrid);
     }
 
-    public void ShowStartup()
+    public void ShowStartup() => ShowHome();
+
+    private void ShowHome()
     {
-        var setup = _services.GetRequiredService<ISetupStateService>().Current;
-        var needsSetup = !setup.Completed || setup.AcceptedNoticesVersion != LegalNotices.Version;
-        if (needsSetup)
-        {
-            ShowWizard();
-        }
-        else
-        {
-            ShowShell();
-        }
+        Title = "My Android Phone";
+        var home = _services.GetRequiredService<HomeView>();
+        home.InstanceOpenRequested += (_, instance) => ShowDesktop(instance);
+        Presenter.Content = home;
     }
 
-    private void ShowWizard()
+    private void ShowDesktop(AndroidInstance instance)
     {
-        var wizard = _services.GetRequiredService<SetupWizardView>();
-        wizard.Finished += (_, _) => ShowShell();
-        Presenter.Content = wizard;
-    }
-
-    private void ShowShell()
-    {
+        Title = instance.Name + " - My Android Phone";
         var shell = _services.GetRequiredService<ShellView>();
-        shell.SetupRerunRequested += (_, _) => ShowWizard();
+        shell.SwitchInstanceRequested += (_, _) => ShowHome();
         Presenter.Content = shell;
+        shell.Open(instance);
     }
 }

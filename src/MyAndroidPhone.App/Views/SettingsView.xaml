@@ -10,7 +10,7 @@
                        Text="Changes are saved immediately. Per-device settings will appear here once device connectivity is implemented." />
 
             <TextBlock Text="Appearance" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,8,0,0" />
-            <ComboBox Header="Theme" SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}" MinWidth="220">
+            <ComboBox Header="Default theme (start screen and new instances)" SelectedIndex="{x:Bind ViewModel.ThemeIndex, Mode=TwoWay}" MinWidth="220">
                 <ComboBoxItem Content="Dark" />
                 <ComboBoxItem Content="Light" />
                 <ComboBoxItem Content="Follow system" />

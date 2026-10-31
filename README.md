@@ -2,15 +2,15 @@
 
 A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecting to and managing Android devices through Android Debug Bridge (adb).
 
-> **Status: early (Stage 3 of 7).** The desktop shell, first-run wizard, tool detection, settings, diagnostics, **adb device discovery (USB and Wi-Fi)**, a **File Explorer** and a **Transfer Center** exist. **Screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
+> **Status: early (Stage 3 of 7).** A start screen with instances and a pop-up create wizard, a desktop per instance with resizable, minimizable and maximizable windows, tool detection, settings, diagnostics, **adb device discovery (USB and Wi-Fi)**, a **File Explorer** and a **Transfer Center** exist. **Screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
 
 ## Current implementation status
 
 | Feature | Status | Verification |
 |---|---|---|
-| Setup wizard (Welcome, Android tools, License notice, Finish) | Implemented, progress persisted | Persistence logic exercised by a console harness on Linux. **WinUI UI not compiled or run.** |
-| Automatic dependency download/install | **Not implemented** | The wizard detects tools and lets you select them; it never downloads or installs anything. |
-| Desktop shell (menu bar, floating module windows, Dock, notifications) | Implemented | XAML checked for well-formedness only. **Not compiled or run.** |
+| Start screen (list of instances, remove) and pop-up create wizard (license, connect by USB or network, name/icon/accent/theme) | Implemented | Instance storage (create, validation, unique device and name, update, delete, restart, corrupt file) exercised on Linux. **WinUI views not compiled or run.** The old first-run wizard was replaced by this flow. |
+| Automatic dependency download/install | **Not implemented** | Tool Manager and the create wizard detect tools and let you select them; nothing is downloaded or installed. |
+| Desktop per instance (menu bar, Window menu, Dock with open/minimized indicators, windows: move, resize from any edge or corner, minimize, maximize/restore, close; per-instance theme; reconnect) | Implemented | XAML checked for well-formedness only. **Not compiled or run.** Window positions are not remembered between sessions. |
 | Tool Manager (detect, verify, select adb/scrcpy) | Implemented (no install/update/remove) | Detection, version parsing and validation exercised against stand-in `adb`/`scrcpy` scripts on Linux. Not run against real adb/scrcpy. |
 | Settings (application) | Implemented: theme, Dock labels, log options, reset | Persistence exercised on Linux. UI not run. |
 | Device Center (list, rename, icon, accent color, pair, connect, switch to Wi-Fi) | Implemented | Service logic tested on Linux; **UI not compiled or run.** Names, icons, colors and last selection persist in `devices.json`. |
@@ -28,7 +28,7 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 ### What was actually verified
 
 - `Core`, `Infrastructure`, `Tools` and `Android` compile on .NET 8 with warnings as errors (on Linux).
-- A throwaway console harness ran 176 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking, device path and shell-quoting rules (including hostile names), storage classification, file operations and transfers. The harness is not part of the repository.
+- A throwaway console harness ran 192 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking, device path and shell-quoting rules (including hostile names), storage classification, file operations and transfers. The harness is not part of the repository.
 - Not verified: the WinUI 3 app project (needs Windows to build), MSIX packaging, behaviour with real adb, scrcpy or Android devices, and the minimum Windows build below.
 
 ## System requirements
@@ -39,7 +39,7 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 
 ## Setup and tools
 
-On first launch the wizard checks for adb and scrcpy in: the app's tools folder (`%LOCALAPPDATA%\MyAndroidPhone\tools`), `ANDROID_HOME`/`ANDROID_SDK_ROOT`, `PATH` and the default Android Studio location. If you choose an executable manually, its file name must match (`adb.exe`, `scrcpy.exe`) and it is run once with its version option; the output must identify the tool before the path is saved. A saved path that later breaks is reported as invalid and is never silently replaced. The app does not change your PATH, does not request administrator rights, and sends no telemetry.
+The app checks for adb and scrcpy at startup in: the app's tools folder (`%LOCALAPPDATA%\MyAndroidPhone\tools`), `ANDROID_HOME`/`ANDROID_SDK_ROOT`, `PATH` and the default Android Studio location. If you choose an executable manually, its file name must match (`adb.exe`, `scrcpy.exe`) and it is run once with its version option; the output must identify the tool before the path is saved. A saved path that later breaks is reported as invalid and is never silently replaced. The app does not change your PATH, does not request administrator rights, and sends no telemetry.
 
 To get adb, download [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools), extract it, and use **Locate executable** in Tool Manager.
 
@@ -108,7 +108,8 @@ Everything is local. No telemetry, no uploads. Logs are redacted for secret-look
 - File names that Windows cannot store (`:`, `*`, reserved names) are saved with `_` substituted.
 - Dragging files out to Windows Explorer downloads them to a temporary folder first (cleaned after a day).
 - Language infrastructure is not implemented; UI text is English only.
-- Window size and position are not persisted.
+- Window size and position are not persisted. Editing an existing instance's name, icon or color is not available yet (remove and create it again; only the theme can be changed from the View menu).
+- One instance per device. Instances controlling the same phone twice are refused.
 - Keyboard navigation and accessibility have not been audited; the Dock buttons and close buttons carry automation names.
 - Single-instance redirection (`Program.cs`) has not been run.
 

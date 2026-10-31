@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using MyAndroidPhone.Android;
 using MyAndroidPhone.Core.Devices;
 using MyAndroidPhone.Core.Features;
+using MyAndroidPhone.Core.Instances;
 using MyAndroidPhone.Core.Files;
 using MyAndroidPhone.Core.Logging;
 using MyAndroidPhone.Core.Platform;
@@ -15,6 +16,7 @@ using MyAndroidPhone.Desktop.Services;
 using MyAndroidPhone.Desktop.ViewModels;
 using MyAndroidPhone.Desktop.Views;
 using MyAndroidPhone.Infrastructure.Diagnostics;
+using MyAndroidPhone.Infrastructure.Instances;
 using MyAndroidPhone.Infrastructure.Logging;
 using MyAndroidPhone.Infrastructure.Platform;
 using MyAndroidPhone.Infrastructure.Processes;
@@ -77,6 +79,7 @@ public partial class App : Application
         services.AddSingleton<IAdbClient, AdbClient>();
         services.AddSingleton<DeviceStoreService>();
         services.AddSingleton<IDeviceService, DeviceService>();
+        services.AddSingleton<IInstanceService, InstanceService>();
         services.AddSingleton<IFileExplorerService, FileExplorerService>();
         services.AddSingleton<ITransferService, TransferService>();
         services.AddSingleton<IFeatureRegistry>(_ => BuiltInFeatures.CreateRegistry());
@@ -89,6 +92,7 @@ public partial class App : Application
         services.AddSingleton<ThemeService>();
         services.AddSingleton<IFilePickerService, FilePickerService>();
         services.AddSingleton<IFolderLauncher, FolderLauncher>();
+        services.AddSingleton<ActiveInstance>();
         services.AddSingleton<ToolActions>();
         services.AddSingleton<ModuleViewFactory>();
 
@@ -100,9 +104,10 @@ public partial class App : Application
         services.AddTransient<DeviceCenterViewModel>();
         services.AddTransient<FileExplorerViewModel>();
         services.AddTransient<TransferCenterViewModel>();
-        services.AddTransient<SetupWizardViewModel>();
+        services.AddTransient<HomeViewModel>();
+        services.AddTransient<CreateInstanceViewModel>();
         services.AddTransient<ShellView>();
-        services.AddTransient<SetupWizardView>();
+        services.AddTransient<HomeView>();
         services.AddTransient<ToolManagerView>();
         services.AddTransient<SettingsView>();
         services.AddTransient<DiagnosticsView>();

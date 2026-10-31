@@ -8,70 +8,59 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Menu bar -->
-        <MenuBar Grid.Row="0">
-            <MenuBarItem Title="My Android Phone">
-                <MenuFlyoutItem Text="Run setup again…" Click="OnRerunSetup" />
-                <MenuFlyoutSeparator />
-                <MenuFlyoutItem Text="Exit" Click="OnExit" />
-            </MenuBarItem>
-            <MenuBarItem x:Name="ToolsMenu" Title="Modules" />
-            <MenuBarItem Title="View">
-                <MenuFlyoutSubItem Text="Theme">
-                    <MenuFlyoutItem Text="Dark" Click="OnThemeDark" />
-                    <MenuFlyoutItem Text="Light" Click="OnThemeLight" />
-                    <MenuFlyoutItem Text="Follow system" Click="OnThemeSystem" />
-                </MenuFlyoutSubItem>
-                <MenuFlyoutItem Text="Close all windows" Click="OnCloseAll" />
-            </MenuBarItem>
-        </MenuBar>
+        <!-- Menu bar with the instance status on the right, like a system menu bar -->
+        <Grid Grid.Row="0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <MenuBar>
+                <MenuBarItem Title="My Android Phone">
+                    <MenuFlyoutItem Text="Switch instance..." Click="OnSwitchInstance" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Exit" Click="OnExit" />
+                </MenuBarItem>
+                <MenuBarItem x:Name="ToolsMenu" Title="Modules" />
+                <MenuBarItem x:Name="WindowMenu" Title="Window" />
+                <MenuBarItem Title="View">
+                    <MenuFlyoutSubItem Text="Theme (this instance)">
+                        <MenuFlyoutItem Text="Dark" Click="OnThemeDark" />
+                        <MenuFlyoutItem Text="Light" Click="OnThemeLight" />
+                        <MenuFlyoutItem Text="Follow system" Click="OnThemeSystem" />
+                    </MenuFlyoutSubItem>
+                </MenuBarItem>
+            </MenuBar>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,16,0">
+                <Ellipse Width="8" Height="8" Fill="{x:Bind h:Converters.StatusBrush(ViewModel.IsDeviceReady), Mode=OneWay}" />
+                <TextBlock Text="{x:Bind ViewModel.DeviceStatus, Mode=OneWay}" Opacity="0.85" TextTrimming="CharacterEllipsis" MaxWidth="520" />
+                <Button Content="Reconnect" Click="OnReconnect" Padding="10,3"
+                        Visibility="{x:Bind h:Converters.ToVisibilityInverse(ViewModel.IsDeviceReady), Mode=OneWay}"
+                        IsEnabled="{x:Bind h:Converters.Not(ViewModel.IsReconnecting), Mode=OneWay}" />
+            </StackPanel>
+        </Grid>
 
-        <!-- Device selector and tool status -->
-        <Border Grid.Row="1" Padding="16,8" CornerRadius="10" Margin="12,4,12,0"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-            <Grid ColumnSpacing="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <FontIcon Glyph="&#xE8EA;" FontSize="16" VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{x:Bind ViewModel.Devices}" SelectedItem="{x:Bind ViewModel.SelectedDevice, Mode=TwoWay}"
-                              PlaceholderText="No device" MinWidth="300" AutomationProperties.Name="Target device">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate x:DataType="vm:DeviceItemViewModel">
-                                <TextBlock Text="{x:Bind Label}" />
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <Button Content="Device Center" Click="OnOpenDeviceCenter" />
+        <!-- Desktop -->
+        <Grid Grid.Row="1" Margin="12,4,12,0">
+            <Border x:Name="Wallpaper" CornerRadius="14" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <StackPanel x:Name="EmptyHint" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                    <Border Width="84" Height="84" CornerRadius="22" HorizontalAlignment="Center" Background="{x:Bind ViewModel.AccentBrush, Mode=OneWay}">
+                        <FontIcon Glyph="{x:Bind ViewModel.InstanceGlyph, Mode=OneWay}" FontSize="40" Foreground="White" />
+                    </Border>
+                    <TextBlock Text="{x:Bind ViewModel.InstanceName, Mode=OneWay}" Style="{StaticResource TitleTextBlockStyle}" HorizontalAlignment="Center" />
+                    <TextBlock Text="{x:Bind ViewModel.DeviceStatus, Mode=OneWay}" HorizontalAlignment="Center" Opacity="0.8" TextWrapping="Wrap" TextAlignment="Center" MaxWidth="460" />
+                    <TextBlock Text="Open a module from the Dock below." HorizontalAlignment="Center" Opacity="0.55" />
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.DeviceStatus, Mode=OneWay}" VerticalAlignment="Center"
-                           Opacity="0.8" TextTrimming="CharacterEllipsis" />
-                <TextBlock Grid.Column="2" Text="{x:Bind ViewModel.ToolSummary, Mode=OneWay}" VerticalAlignment="Center"
-                           Opacity="0.7" TextTrimming="CharacterEllipsis" MaxWidth="360" />
-            </Grid>
-        </Border>
-
-        <!-- Workspace: module windows float here -->
-        <Grid Grid.Row="2" Margin="12">
-            <Border CornerRadius="12" Background="{ThemeResource LayerFillColorDefaultBrush}">
-                <TextBlock x:Name="EmptyHint" Text="Open a module from the Dock below." HorizontalAlignment="Center"
-                           VerticalAlignment="Center" Opacity="0.55" />
             </Border>
             <Canvas x:Name="Workspace" SizeChanged="OnWorkspaceSizeChanged" />
             <StackPanel x:Name="NotificationHost" VerticalAlignment="Top" HorizontalAlignment="Right" Spacing="6" Width="420" Margin="0,8,8,0" />
         </Grid>
 
         <!-- Dock -->
-        <Border Grid.Row="3" HorizontalAlignment="Center" Margin="0,0,0,12" Padding="10,8" CornerRadius="18"
+        <Border Grid.Row="2" HorizontalAlignment="Center" Margin="0,8,0,12" Padding="10,8" CornerRadius="18"
                 Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
             <ItemsControl ItemsSource="{x:Bind ViewModel.DockItems}" TabFocusNavigation="Local">
@@ -89,7 +78,7 @@
                                 <TextBlock Text="{x:Bind DisplayName}" FontSize="11" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
                                            Visibility="{x:Bind h:Converters.ToVisibility(ShowLabel), Mode=OneWay}" />
                                 <Ellipse Width="4" Height="4" HorizontalAlignment="Center" Fill="{ThemeResource TextFillColorPrimaryBrush}"
-                                         Opacity="{x:Bind h:Converters.ToOpacity(IsOpen), Mode=OneWay}" />
+                                         Opacity="{x:Bind IndicatorOpacity, Mode=OneWay}" />
                             </StackPanel>
                         </Button>
                     </DataTemplate>

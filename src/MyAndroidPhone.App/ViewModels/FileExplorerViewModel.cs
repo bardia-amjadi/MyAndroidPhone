@@ -64,6 +64,7 @@ public sealed partial class FileExplorerViewModel : ObservableObject, IDisposabl
     private const string DefaultPath = "/sdcard";
 
     private readonly IDeviceService _devices;
+    private readonly ActiveInstance _active;
     private readonly IFileExplorerService _files;
     private readonly ITransferService _transfers;
     private readonly IFilePickerService _pickers;
@@ -90,9 +91,11 @@ public sealed partial class FileExplorerViewModel : ObservableObject, IDisposabl
         IFilePickerService pickers,
         IUiDispatcher ui,
         INotificationService notifications,
+        ActiveInstance active,
         ILogger<FileExplorerViewModel> logger)
     {
         _devices = devices;
+        _active = active;
         _files = files;
         _transfers = transfers;
         _pickers = pickers;
@@ -714,7 +717,10 @@ public sealed partial class FileExplorerViewModel : ObservableObject, IDisposabl
 
     private async Task SyncDeviceAsync(bool forceReload)
     {
-        var device = _devices.SelectedDevice;
+        // The desktop's instance decides which phone this window shows, not Device Center's selection.
+        var device = _active.Current is { } instance
+            ? _devices.Devices.FirstOrDefault(d => d.Serial == instance.DeviceSerial)
+            : _devices.SelectedDevice;
         var usable = device is { IsOnline: true } ? device : null;
         var newSerial = usable?.Serial;
         if (newSerial == _serial && !forceReload)

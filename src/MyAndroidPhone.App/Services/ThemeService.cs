@@ -3,12 +3,13 @@ using MyAndroidPhone.Core.Settings;
 
 namespace MyAndroidPhone.Desktop.Services;
 
-/// <summary>Applies the persisted theme (dark by default) to the window's root element and follows setting changes.</summary>
+/// <summary>Applies the default theme (dark unless changed in Settings) or the open instance's theme to the window's root element.</summary>
 public sealed class ThemeService
 {
     private readonly ISettingsService _settings;
     private readonly IUiDispatcher _ui;
     private FrameworkElement? _root;
+    private AppTheme? _override;
 
     public ThemeService(ISettingsService settings, IUiDispatcher ui)
     {
@@ -23,6 +24,13 @@ public sealed class ThemeService
         Apply();
     }
 
+    /// <summary>An open instance uses its own theme; pass null to go back to the application default.</summary>
+    public void UseOverride(AppTheme? theme)
+    {
+        _override = theme;
+        Apply();
+    }
+
     private void Apply()
     {
         if (_root is null)
@@ -30,7 +38,7 @@ public sealed class ThemeService
             return;
         }
 
-        _root.RequestedTheme = _settings.Current.Theme switch
+        _root.RequestedTheme = (_override ?? _settings.Current.Theme) switch
         {
             AppTheme.Light => ElementTheme.Light,
             AppTheme.System => ElementTheme.Default,

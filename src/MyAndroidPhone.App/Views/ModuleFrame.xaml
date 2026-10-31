@@ -3,27 +3,46 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Floating module window chrome: draggable title bar, close button, rounded themed surface. -->
-    <Border CornerRadius="12" BorderThickness="1"
-            BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
-            Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Grid x:Name="TitleBar" Padding="14,6,6,6" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="12,12,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="TitleText" VerticalAlignment="Center" FontWeight="SemiBold" />
-                <Button x:Name="CloseButton" Grid.Column="1" Padding="8,4" Background="Transparent" BorderThickness="0"
-                        Click="OnCloseClicked" ToolTipService.ToolTip="Close">
-                    <FontIcon Glyph="&#xE711;" FontSize="12" />
-                </Button>
+    <UserControl.Resources>
+        <!-- Round window buttons (close, minimize, zoom). The glyph appears while the pointer is over the group. -->
+        <ControlTemplate x:Key="LightTemplate" TargetType="Button">
+            <Grid Width="14" Height="14" Background="Transparent">
+                <Ellipse Fill="{TemplateBinding Background}" />
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Grid>
-            <ContentPresenter x:Name="Presenter" Grid.Row="1" />
-        </Grid>
-    </Border>
+        </ControlTemplate>
+    </UserControl.Resources>
+
+    <Grid x:Name="Root">
+        <Border x:Name="Surface" CornerRadius="12" BorderThickness="1"
+                BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}"
+                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid x:Name="TitleBar" Padding="12,0,12,0" Height="38" Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="12,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel x:Name="Lights" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Button x:Name="CloseButton" Template="{StaticResource LightTemplate}" Background="#FF5F57" Click="OnCloseClicked" ToolTipService.ToolTip="Close">
+                            <FontIcon x:Name="CloseGlyph" Glyph="&#xE711;" FontSize="8" Opacity="0" Foreground="#4D0000" />
+                        </Button>
+                        <Button x:Name="MinimizeButton" Template="{StaticResource LightTemplate}" Background="#FEBC2E" Click="OnMinimizeClicked" ToolTipService.ToolTip="Minimize">
+                            <FontIcon x:Name="MinimizeGlyph" Glyph="&#xE921;" FontSize="8" Opacity="0" Foreground="#5C3D00" />
+                        </Button>
+                        <Button x:Name="MaximizeButton" Template="{StaticResource LightTemplate}" Background="#28C840" Click="OnMaximizeClicked" ToolTipService.ToolTip="Maximize">
+                            <FontIcon x:Name="MaximizeGlyph" Glyph="&#xE922;" FontSize="8" Opacity="0" Foreground="#003D0A" />
+                        </Button>
+                    </StackPanel>
+                    <TextBlock x:Name="TitleText" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                </Grid>
+                <ContentPresenter x:Name="Presenter" Grid.Row="1" />
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>
