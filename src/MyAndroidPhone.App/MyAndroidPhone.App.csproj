@@ -34,6 +34,13 @@
     <ProjectReference Include="..\MyAndroidPhone.Tools\MyAndroidPhone.Tools.csproj" />
   </ItemGroup>
 
+  <!-- The first-run wizard was replaced by the instances flow. These stay excluded even if the old files are still on disk. -->
+  <ItemGroup>
+    <Compile Remove="ViewModels\SetupWizardViewModel.cs" />
+    <Compile Remove="Views\SetupWizardView.xaml.cs" />
+    <Page Remove="Views\SetupWizardView.xaml" />
+  </ItemGroup>
+
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
     <Content Include="Assets\*.png" />
