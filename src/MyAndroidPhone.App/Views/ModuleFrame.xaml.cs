@@ -16,7 +16,7 @@ public enum FrameState
 }
 
 /// <summary>A pointer-sensitive strip on a window edge or corner that shows the matching resize cursor.</summary>
-internal sealed class ResizeHandle : Border
+internal sealed class ResizeHandle : Grid
 {
     public ResizeHandle(InputSystemCursorShape shape, bool left, bool top, bool right, bool bottom)
     {
@@ -68,8 +68,8 @@ public sealed partial class ModuleFrame : UserControl
         Presenter.Content = content;
         TitleBar.DoubleTapped += (_, _) => MaximizeToggleRequested?.Invoke(this, EventArgs.Empty);
 
-        Lights.PointerEntered += (_, _) => SetGlyphs(true);
-        Lights.PointerExited += (_, _) => SetGlyphs(false);
+        TrafficLights.PointerEntered += (_, _) => SetGlyphs(true);
+        TrafficLights.PointerExited += (_, _) => SetGlyphs(false);
 
         AddHandle(InputSystemCursorShape.SizeWestEast, true, false, false, false, HorizontalAlignment.Left, VerticalAlignment.Stretch, EdgeSize, double.NaN, new Thickness(0, CornerSize, 0, CornerSize));
         AddHandle(InputSystemCursorShape.SizeWestEast, false, false, true, false, HorizontalAlignment.Right, VerticalAlignment.Stretch, EdgeSize, double.NaN, new Thickness(0, CornerSize, 0, CornerSize));
