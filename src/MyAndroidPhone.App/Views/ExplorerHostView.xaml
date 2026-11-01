@@ -1,0 +1,41 @@
+<UserControl
+    x:Class="MyAndroidPhone.Desktop.Views.ExplorerHostView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="Host">
+        <!-- Root: the two important folders -->
+        <Grid x:Name="RootPane" Padding="24" RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel Spacing="2">
+                <TextBlock Text="/" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock Text="Two places: the phone, and this instance's own space on the PC." Opacity="0.7" />
+            </StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
+                <Button Click="OnOpenAndroid" Padding="20" Width="260" HorizontalContentAlignment="Left" CornerRadius="12"
+                        AutomationProperties.Name=".android, the phone">
+                    <StackPanel Spacing="8">
+                        <FontIcon Glyph="&#xE8EA;" FontSize="32" HorizontalAlignment="Left" />
+                        <TextBlock Text=".android" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Name="AndroidText" Text="The files on your phone." TextWrapping="Wrap" Opacity="0.7" />
+                    </StackPanel>
+                </Button>
+                <Button Click="OnOpenSystem" Padding="20" Width="260" HorizontalContentAlignment="Left" CornerRadius="12"
+                        AutomationProperties.Name=".system, this instance's space">
+                    <StackPanel Spacing="8">
+                        <FontIcon Glyph="&#xE8B7;" FontSize="32" HorizontalAlignment="Left" />
+                        <TextBlock Text=".system" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBlock Text="Logs, downloads, screenshots and notes of this instance, stored on this PC." TextWrapping="Wrap" Opacity="0.7" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <Grid x:Name="AndroidHost" Visibility="Collapsed" />
+        <Grid x:Name="SystemHost" Visibility="Collapsed" />
+    </Grid>
+</UserControl>

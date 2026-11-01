@@ -4,12 +4,16 @@ namespace MyAndroidPhone.Core.Processes;
 /// <param name="Arguments">Discrete arguments; they are passed through ArgumentList and never concatenated into a string.</param>
 /// <param name="Timeout">Optional hard limit; the process tree is killed when it elapses.</param>
 /// <param name="SensitiveArgumentIndexes">Indexes of arguments (e.g. a pairing code) that must be masked in logs.</param>
+/// <param name="OnLine">Called for every output line as it arrives (second argument: true for standard error). Called from a background thread.</param>
+/// <param name="CaptureOutput">False for long-running streams: lines go only to <paramref name="OnLine"/> and are not kept in memory.</param>
 public sealed record ProcessRunRequest(
     string FileName,
     IReadOnlyList<string> Arguments,
     TimeSpan? Timeout = null,
     string? WorkingDirectory = null,
-    IReadOnlyCollection<int>? SensitiveArgumentIndexes = null);
+    IReadOnlyCollection<int>? SensitiveArgumentIndexes = null,
+    Action<string, bool>? OnLine = null,
+    bool CaptureOutput = true);
 
 public enum ProcessRunStatus
 {

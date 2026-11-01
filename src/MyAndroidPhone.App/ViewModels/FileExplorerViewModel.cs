@@ -211,6 +211,8 @@ public sealed partial class FileExplorerViewModel : ObservableObject, IDisposabl
         await SyncDeviceAsync(forceReload: true).ConfigureAwait(true);
     }
 
+    public IReadOnlyList<FileEntryViewModel> Selection => _selection;
+
     public void SetSelection(IEnumerable<FileEntryViewModel> selected)
     {
         _selection = selected.ToList();

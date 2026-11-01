@@ -46,6 +46,25 @@
         <!-- Desktop -->
         <Grid Grid.Row="1" Margin="12,4,12,0">
             <Border x:Name="Wallpaper" CornerRadius="14" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                <Border.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="Open Terminal" Tag="terminal" Click="OnDesktopOpen" />
+                        <MenuFlyoutItem Text="Open File Explorer" Tag="file-explorer" Click="OnDesktopOpen" />
+                        <MenuFlyoutItem Text="Open Notepad" Tag="notepad" Click="OnDesktopOpen" />
+                        <MenuFlyoutItem Text="Device Center" Tag="device-center" Click="OnDesktopOpen" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="Arrange windows" Click="OnArrangeWindows" />
+                        <MenuFlyoutItem Text="Show all minimized windows" Click="OnShowMinimized" />
+                        <MenuFlyoutItem Text="Close all windows" Click="OnCloseAll" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutSubItem Text="Theme (this instance)">
+                            <MenuFlyoutItem Text="Dark" Click="OnThemeDark" />
+                            <MenuFlyoutItem Text="Light" Click="OnThemeLight" />
+                            <MenuFlyoutItem Text="Follow system" Click="OnThemeSystem" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutItem Text="Switch instance..." Click="OnSwitchInstance" />
+                    </MenuFlyout>
+                </Border.ContextFlyout>
                 <StackPanel x:Name="EmptyHint" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
                     <Border Width="84" Height="84" CornerRadius="22" HorizontalAlignment="Center" Background="{x:Bind ViewModel.AccentBrush, Mode=OneWay}">
                         <FontIcon Glyph="{x:Bind ViewModel.InstanceGlyph, Mode=OneWay}" FontSize="40" Foreground="White" />
@@ -56,6 +75,7 @@
                 </StackPanel>
             </Border>
             <Canvas x:Name="Workspace" SizeChanged="OnWorkspaceSizeChanged" />
+            <Grid x:Name="OverlayHost" />
             <StackPanel x:Name="NotificationHost" VerticalAlignment="Top" HorizontalAlignment="Right" Spacing="6" Width="420" Margin="0,8,8,0" />
         </Grid>
 

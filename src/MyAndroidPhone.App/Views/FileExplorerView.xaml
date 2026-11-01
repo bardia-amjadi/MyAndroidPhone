@@ -24,6 +24,7 @@
         <!-- Toolbar -->
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" IsOpen="False" Background="Transparent"
                     Visibility="{x:Bind h:Converters.ToVisibility(ViewModel.HasDevice), Mode=OneWay}">
+            <AppBarButton Icon="Home" Label="Home" Click="OnHome" ToolTipService.ToolTip="Back to / (.android and .system)" />
             <AppBarButton Icon="Back" Label="Back" Command="{x:Bind ViewModel.GoBackCommand}" IsEnabled="{x:Bind ViewModel.CanGoBack, Mode=OneWay}" />
             <AppBarButton Icon="Forward" Label="Forward" Command="{x:Bind ViewModel.GoForwardCommand}" IsEnabled="{x:Bind ViewModel.CanGoForward, Mode=OneWay}" />
             <AppBarButton Icon="Up" Label="Up" Command="{x:Bind ViewModel.GoUpCommand}" IsEnabled="{x:Bind ViewModel.CanGoUp, Mode=OneWay}" />
@@ -140,6 +141,9 @@
                     </ListView.ItemTemplate>
                     <ListView.ContextFlyout>
                         <MenuFlyout>
+                            <MenuFlyoutItem Text="Open in Notepad (read-only)" Click="OnOpenInNotepad" />
+                            <MenuFlyoutItem Text="Open Terminal" Click="OnOpenTerminal" />
+                            <MenuFlyoutSeparator />
                             <MenuFlyoutItem Text="Save to this PC" Command="{x:Bind ViewModel.DownloadCommand}" />
                             <MenuFlyoutItem Text="Copy" Command="{x:Bind ViewModel.CopyCommand}" />
                             <MenuFlyoutItem Text="Cut" Command="{x:Bind ViewModel.CutCommand}" />

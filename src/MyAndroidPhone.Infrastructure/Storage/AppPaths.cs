@@ -14,6 +14,7 @@ public sealed class AppPaths
         InstancesFile = Path.Combine(Root, "instances.json");
         LogsDirectory = Path.Combine(Root, "logs");
         ToolsDirectory = Path.Combine(Root, "tools");
+        InstancesDirectory = Path.Combine(Root, "instances");
     }
 
     public string Root { get; }
@@ -27,6 +28,9 @@ public sealed class AppPaths
     public string InstancesFile { get; }
 
     public string LogsDirectory { get; }
+
+    /// <summary>Per-instance folders; each holds the instance's .system space.</summary>
+    public string InstancesDirectory { get; }
 
     /// <summary>Folder for tools the application manages itself. Existing user installations are never written here.</summary>
     public string ToolsDirectory { get; }

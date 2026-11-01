@@ -17,6 +17,12 @@ public interface IAdbClient
     /// <summary>Runs one shell command on the device. The command string must already be safely quoted.</summary>
     Task<OperationResult<AdbCommandOutput>> ShellAsync(string serial, string command, TimeSpan timeout, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Runs an adb command for one device and delivers its output line by line while it runs (logcat, long shell commands).
+    /// Returns the exit code; cancelling the token stops the process. Nothing is kept in memory.
+    /// </summary>
+    Task<OperationResult<int>> StreamAsync(string serial, IReadOnlyList<string> deviceArguments, Action<string, bool> onLine, CancellationToken cancellationToken);
+
     Task<OperationResult<AdbCommandOutput>> PullAsync(string serial, string remotePath, string localPath, CancellationToken cancellationToken);
 
     Task<OperationResult<AdbCommandOutput>> PushAsync(string serial, string localPath, string remotePath, CancellationToken cancellationToken);
@@ -79,6 +85,37 @@ public sealed class AdbClient(IProcessRunner runner, IToolService tools, ILogger
 
         var run = await RunAsync(DeviceArgs(serial, "shell", command), timeout, null, cancellationToken, allowNonZeroExit: true).ConfigureAwait(false);
         return ToOutput(run);
+    }
+
+    public async Task<OperationResult<int>> StreamAsync(string serial, IReadOnlyList<string> deviceArguments, Action<string, bool> onLine, CancellationToken cancellationToken)
+    {
+        var valid = InputValidator.ValidateSerial(serial);
+        if (!valid.Succeeded)
+        {
+            return OperationResult<int>.Failure(valid.Error!);
+        }
+
+        if (deviceArguments.Count == 0 || deviceArguments.Any(a => a.Contains('\0')))
+        {
+            return OperationResult<int>.Failure(ErrorKind.InvalidInput, "Invalid adb command.");
+        }
+
+        var adb = tools.Get(ToolId.Adb);
+        if (!adb.IsUsable || adb.ExecutablePath is null)
+        {
+            return OperationResult<int>.Failure(ErrorKind.NotFound, "adb is not available. Open Tool Manager and select adb.exe from Android SDK Platform-Tools.");
+        }
+
+        var result = await runner
+            .RunAsync(new ProcessRunRequest(adb.ExecutablePath, DeviceArgs(serial, deviceArguments.ToArray()), null, null, null, onLine, false), cancellationToken)
+            .ConfigureAwait(false);
+        return result.Status switch
+        {
+            ProcessRunStatus.Completed => OperationResult<int>.Success(result.ExitCode ?? -1),
+            ProcessRunStatus.Cancelled => OperationResult<int>.Failure(ErrorKind.Cancelled, "Stopped."),
+            ProcessRunStatus.ExecutableNotFound => OperationResult<int>.Failure(ErrorKind.NotFound, "adb.exe could not be found at the configured location."),
+            _ => OperationResult<int>.Failure(ErrorKind.ProcessFailure, result.FailureMessage ?? "adb could not be started.")
+        };
     }
 
     public async Task<OperationResult<AdbCommandOutput>> PullAsync(string serial, string remotePath, string localPath, CancellationToken cancellationToken)

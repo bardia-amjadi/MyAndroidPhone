@@ -1,0 +1,40 @@
+<UserControl
+    x:Class="MyAndroidPhone.Desktop.Views.NotepadView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid x:Name="Root" RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <CommandBar Grid.Row="0" DefaultLabelPosition="Right" IsOpen="False" Background="Transparent">
+            <AppBarButton Icon="Add" Label="New" Click="OnNew" ToolTipService.ToolTip="New tab (Ctrl+N)" />
+            <AppBarButton Icon="OpenFile" Label="Open" Click="OnOpenPath" ToolTipService.ToolTip="Open a file by its path, e.g. /.system/logs/... (Ctrl+O)" />
+            <AppBarButton Icon="Save" Label="Save" Click="OnSave" ToolTipService.ToolTip="Save (Ctrl+S)" />
+            <AppBarButton Icon="Refresh" Label="Reload" Click="OnReload" ToolTipService.ToolTip="Read the file again (useful for the log being written)" />
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Icon="SaveLocal" Label="Save a copy on this PC..." Click="OnSaveAs" />
+                <AppBarButton Icon="OpenLocal" Label="Open a file from this PC..." Click="OnOpenFromPc" />
+                <AppBarSeparator />
+                <AppBarToggleButton x:Name="WrapToggle" Icon="AlignLeft" Label="Word wrap" Click="OnWrapChanged" IsChecked="True" />
+                <AppBarButton Icon="ZoomIn" Label="Larger text" Click="OnZoomIn" />
+                <AppBarButton Icon="ZoomOut" Label="Smaller text" Click="OnZoomOut" />
+            </CommandBar.SecondaryCommands>
+        </CommandBar>
+
+        <TabView Grid.Row="1" x:Name="Tabs" IsAddTabButtonVisible="False" CanReorderTabs="True" CanDragTabs="False"
+                 TabWidthMode="SizeToContent" TabCloseRequested="OnTabCloseRequested" SelectionChanged="OnTabSelectionChanged" />
+
+        <Grid Grid.Row="2" Padding="12,4" ColumnSpacing="16" Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="PathText" Style="{StaticResource CaptionTextBlockStyle}" TextTrimming="CharacterEllipsis" Opacity="0.8" />
+            <TextBlock x:Name="PositionText" Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.8" />
+        </Grid>
+    </Grid>
+</UserControl>

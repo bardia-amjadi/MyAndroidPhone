@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using MyAndroidPhone.Core.Files;
+using MyAndroidPhone.Desktop.Services;
 using MyAndroidPhone.Desktop.ViewModels;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
@@ -15,9 +16,14 @@ namespace MyAndroidPhone.Desktop.Views;
 /// </summary>
 public sealed partial class FileExplorerView : UserControl
 {
-    public FileExplorerView(FileExplorerViewModel viewModel)
+    private readonly DesktopCommands _commands;
+    private bool _ready;
+    private string? _startPath;
+
+    public FileExplorerView(FileExplorerViewModel viewModel, DesktopCommands commands)
     {
         ViewModel = viewModel;
+        _commands = commands;
         InitializeComponent();
 
         ViewModel.PromptAsync = PromptAsync;
@@ -33,11 +39,48 @@ public sealed partial class FileExplorerView : UserControl
         AddShortcut(VirtualKey.Up, VirtualKeyModifiers.Menu, () => ViewModel.GoUpCommand.Execute(null));
         AddShortcut(VirtualKey.Back, VirtualKeyModifiers.None, () => ViewModel.GoBackCommand.Execute(null));
 
-        Loaded += async (_, _) => await ViewModel.InitializeAsync();
+        Loaded += async (_, _) =>
+        {
+            await ViewModel.InitializeAsync();
+            _ready = true;
+            if (_startPath is { } path)
+            {
+                _startPath = null;
+                await ViewModel.NavigateAsync(path);
+            }
+        };
         Unloaded += (_, _) => ViewModel.Dispose();
     }
 
     public FileExplorerViewModel ViewModel { get; }
+
+    /// <summary>The user went back to the root (/) that holds .android and .system.</summary>
+    public event EventHandler? HomeRequested;
+
+    /// <summary>Goes to a phone folder; waits for the first load when the window was just created.</summary>
+    public async Task NavigateWhenReadyAsync(string devicePath)
+    {
+        if (_ready)
+        {
+            await ViewModel.NavigateAsync(devicePath);
+        }
+        else
+        {
+            _startPath = devicePath;
+        }
+    }
+
+    private void OnHome(object sender, RoutedEventArgs e) => HomeRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnOpenInNotepad(object sender, RoutedEventArgs e)
+    {
+        foreach (var item in ViewModel.Selection.Where(s => !s.IsDirectory))
+        {
+            _commands.OpenInNotepad("/.android" + item.FullPath);
+        }
+    }
+
+    private void OnOpenTerminal(object sender, RoutedEventArgs e) => _commands.OpenModule(ModuleIds.Terminal);
 
     private void AddShortcut(VirtualKey key, VirtualKeyModifiers modifiers, Action action)
     {

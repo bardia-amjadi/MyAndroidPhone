@@ -2,7 +2,7 @@
 
 A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecting to and managing Android devices through Android Debug Bridge (adb).
 
-> **Status: early (Stage 3 of 7).** A start screen with instances and a pop-up create wizard, a desktop per instance with resizable, minimizable and maximizable windows, tool detection, settings, diagnostics, **adb device discovery (USB and Wi-Fi)**, a **File Explorer** and a **Transfer Center** exist. **Screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
+> **Status: early (Stage 4 of 7).** A start screen with instances and a pop-up create wizard, a desktop per instance with resizable, minimizable and maximizable windows, tool detection, settings, diagnostics, **adb device discovery (USB and Wi-Fi)**, a **File Explorer** (root `/` with `.android` = the phone and `.system` = the instance's own space on the PC), a **Transfer Center**, a **Terminal** (adb plus built-in commands, highlighted output, `show logs`, `open /.system/logs/<DATETIME>.log`), a **Notepad**, per-session logs in `.system/logs/` and a start-menu style **Device Center** (phone battery, Wi-Fi, storage, memory, launchers, open-window list) exist. **Screen mirroring and app management are not implemented yet.** The UI does not show controls for them. Nothing has been run on Windows or against a real phone yet.
 
 ## Current implementation status
 
@@ -13,7 +13,10 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 | Desktop per instance (menu bar, Window menu, Dock with open/minimized indicators, windows: move, resize from any edge or corner, minimize, maximize/restore, close; per-instance theme; reconnect) | Implemented | XAML checked for well-formedness only. **Not compiled or run.** Window positions are not remembered between sessions. |
 | Tool Manager (detect, verify, select adb/scrcpy) | Implemented (no install/update/remove) | Detection, version parsing and validation exercised against stand-in `adb`/`scrcpy` scripts on Linux. Not run against real adb/scrcpy. |
 | Settings (application) | Implemented: theme, Dock labels, log options, reset | Persistence exercised on Linux. UI not run. |
-| Device Center (list, rename, icon, accent color, pair, connect, switch to Wi-Fi) | Implemented | Service logic tested on Linux; **UI not compiled or run.** Names, icons, colors and last selection persist in `devices.json`. |
+| Terminal (`help`, `ls`, `cd`, `cat`, `open`, `show`, `pull`, `push`, `rm`, `mv`, `adb ...`, `shell ...`, `logcat`) | Implemented | Engine tested on Linux against a fake adb; **UI not compiled or run.** Interactive `adb shell` is not supported. Typed input is not colored while typing; executed lines and output are. |
+| Notepad (tabs, phone files read-only, save a copy on the PC) | Implemented | **Not compiled or run.** |
+| Device Center start menu and `.system` session logs | Implemented | Status parsing and logs tested on Linux; **UI not compiled or run.** |
+| Connections (list, rename, icon, accent color, pair, connect, switch to Wi-Fi) | Implemented | Service logic tested on Linux; **UI not compiled or run.** Names, icons, colors and last selection persist in `devices.json`. |
 | Settings (device) | Not implemented | Device settings and display configuration commands are not built yet. |
 | Logs and Diagnostics (view, redacted export) | Implemented | Report builder and rotating logger exercised on Linux. UI not run. |
 | USB connection (discovery, authorization states, details, guidance) | Implemented | Parsing, state handling and per-device targeting exercised against a fake adb on Linux. **Not tested with a real phone or on Windows.** |
@@ -28,7 +31,7 @@ A native Windows desktop application (C#, WinUI 3, Windows App SDK) for connecti
 ### What was actually verified
 
 - `Core`, `Infrastructure`, `Tools` and `Android` compile on .NET 8 with warnings as errors (on Linux).
-- A throwaway console harness ran 192 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking, device path and shell-quoting rules (including hostile names), storage classification, file operations and transfers. The harness is not part of the repository.
+- A throwaway console harness ran 259 checks against that code (including a fake `adb` that reproduces adb output formats) and all passed: process runner (argument handling without a shell, timeout and cancel kill the process, large stdout and stderr do not deadlock, missing executable), JSON settings and setup-state persistence (including corrupt-file recovery), tool detection and rejection of impostor executables, log rotation and redaction, diagnostics report, feature registry, adb output parsing, input validation, the device service (multi-device targeting with `-s`, unplug/replug, persistence across restarts, pairing code never logged, missing adb) and diagnostics masking, device path and shell-quoting rules (including hostile names), storage classification, file operations and transfers. The harness is not part of the repository.
 - Not verified: the WinUI 3 app project (needs Windows to build), MSIX packaging, behaviour with real adb, scrcpy or Android devices, and the minimum Windows build below.
 
 ## System requirements

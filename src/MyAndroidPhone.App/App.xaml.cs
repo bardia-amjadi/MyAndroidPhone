@@ -12,6 +12,7 @@ using MyAndroidPhone.Core.Processes;
 using MyAndroidPhone.Core.Settings;
 using MyAndroidPhone.Core.Tools;
 using MyAndroidPhone.Core.Transfers;
+using MyAndroidPhone.Core.Workspace;
 using MyAndroidPhone.Desktop.Services;
 using MyAndroidPhone.Desktop.ViewModels;
 using MyAndroidPhone.Desktop.Views;
@@ -21,6 +22,7 @@ using MyAndroidPhone.Infrastructure.Logging;
 using MyAndroidPhone.Infrastructure.Platform;
 using MyAndroidPhone.Infrastructure.Processes;
 using MyAndroidPhone.Infrastructure.Storage;
+using MyAndroidPhone.Infrastructure.Workspace;
 using MyAndroidPhone.Tools;
 
 namespace MyAndroidPhone.Desktop;
@@ -93,6 +95,10 @@ public partial class App : Application
         services.AddSingleton<IFilePickerService, FilePickerService>();
         services.AddSingleton<IFolderLauncher, FolderLauncher>();
         services.AddSingleton<ActiveInstance>();
+        services.AddSingleton<DesktopCommands>();
+        services.AddSingleton<IInstanceWorkspace, InstanceWorkspace>();
+        services.AddSingleton<IDeviceStatusService, DeviceStatusService>();
+        services.AddSingleton<VirtualFileSystem>();
         services.AddSingleton<ToolActions>();
         services.AddSingleton<ModuleViewFactory>();
 
@@ -106,6 +112,14 @@ public partial class App : Application
         services.AddTransient<TransferCenterViewModel>();
         services.AddTransient<HomeViewModel>();
         services.AddTransient<CreateInstanceViewModel>();
+        services.AddTransient<TerminalViewModel>();
+        services.AddTransient<SystemFilesViewModel>();
+        services.AddTransient<StartMenuViewModel>();
+        services.AddTransient<TerminalView>();
+        services.AddTransient<NotepadView>();
+        services.AddTransient<SystemFilesView>();
+        services.AddTransient<ExplorerHostView>();
+        services.AddTransient<StartMenuView>();
         services.AddTransient<ShellView>();
         services.AddTransient<HomeView>();
         services.AddTransient<ToolManagerView>();

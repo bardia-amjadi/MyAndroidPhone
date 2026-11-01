@@ -50,8 +50,8 @@ public sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRunne
         var standardOutput = new StringBuilder();
         var standardError = new StringBuilder();
         using var process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
-        process.OutputDataReceived += (_, e) => Append(standardOutput, e.Data);
-        process.ErrorDataReceived += (_, e) => Append(standardError, e.Data);
+        process.OutputDataReceived += (_, e) => OnData(request, standardOutput, e.Data, isError: false);
+        process.ErrorDataReceived += (_, e) => OnData(request, standardError, e.Data, isError: true);
 
         logger.LogDebug("Starting: {Command}", display);
 
@@ -118,6 +118,28 @@ public sealed class ProcessRunner(ILogger<ProcessRunner> logger) : IProcessRunne
             null);
         logger.LogDebug("Exited with {ExitCode} after {Elapsed} ms: {Command}", result.ExitCode, (long)stopwatch.Elapsed.TotalMilliseconds, display);
         return result;
+    }
+
+    private static void OnData(ProcessRunRequest request, StringBuilder builder, string? line, bool isError)
+    {
+        if (line is null)
+        {
+            return;
+        }
+
+        if (request.CaptureOutput)
+        {
+            Append(builder, line);
+        }
+
+        try
+        {
+            request.OnLine?.Invoke(line, isError);
+        }
+        catch (Exception)
+        {
+            // A faulty observer must never break process handling.
+        }
     }
 
     private static void Append(StringBuilder builder, string? line)

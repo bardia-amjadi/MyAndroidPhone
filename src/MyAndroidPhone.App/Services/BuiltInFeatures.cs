@@ -15,6 +15,9 @@ public static class ModuleIds
     public const string ToolManager = "tool-manager";
     public const string Settings = "settings";
     public const string Diagnostics = "diagnostics";
+    public const string Terminal = "terminal";
+    public const string Notepad = "notepad";
+    public const string Connections = "connections";
 }
 
 /// <summary>
@@ -50,12 +53,43 @@ public static class BuiltInFeatures
         registry.Register(new FeatureDescriptor(
             ModuleIds.DeviceCenter,
             "Device Center",
-            "See connected Android devices, connect over USB or Wi-Fi, and name them.",
+            "Start menu for the phone: battery, Wi-Fi, storage and memory, apps, and the list of open windows.",
             "\uE8EA",
             60,
             Array.Empty<ToolId>(),
             Array.Empty<string>(),
-            new[] { "List devices", "Pair and connect wirelessly", "Switch USB device to Wi-Fi", "Rename and recolor devices" }));
+            new[] { "Phone status", "Launch modules", "Show or end open windows" }));
+
+        registry.Register(new FeatureDescriptor(
+            ModuleIds.Terminal,
+            "Terminal",
+            "Run adb and built-in commands for this phone, with highlighted output and session logs.",
+            "\uE756",
+            15,
+            new[] { ToolId.Adb },
+            Array.Empty<string>(),
+            new[] { "adb commands", "Manual commands", "show logs", "open files in Notepad" }));
+
+        registry.Register(new FeatureDescriptor(
+            ModuleIds.Notepad,
+            "Notepad",
+            "Read and edit text files: logs, notes and files from the phone.",
+            "\uE70B",
+            16,
+            Array.Empty<ToolId>(),
+            Array.Empty<string>(),
+            new[] { "Open", "Save", "Save a copy", "Tabs" }));
+
+        registry.Register(new FeatureDescriptor(
+            ModuleIds.Connections,
+            "Connections",
+            "See connected Android devices, connect over USB or Wi-Fi, and name them.",
+            "\uE702",
+            61,
+            Array.Empty<ToolId>(),
+            Array.Empty<string>(),
+            new[] { "List devices", "Pair and connect wirelessly", "Switch USB device to Wi-Fi" },
+            ShowInDock: false));
 
         registry.Register(new FeatureDescriptor(
             ModuleIds.ToolManager,
@@ -100,9 +134,11 @@ public sealed class ModuleViewFactory
     {
         _entries = new Dictionary<string, (Func<FrameworkElement>, Size)>
         {
-            [ModuleIds.FileExplorer] = (() => services.GetRequiredService<FileExplorerView>(), new Size(1020, 640)),
+            [ModuleIds.FileExplorer] = (() => services.GetRequiredService<ExplorerHostView>(), new Size(1020, 640)),
             [ModuleIds.TransferCenter] = (() => services.GetRequiredService<TransferCenterView>(), new Size(720, 520)),
-            [ModuleIds.DeviceCenter] = (() => services.GetRequiredService<DeviceCenterView>(), new Size(940, 640)),
+            [ModuleIds.Connections] = (() => services.GetRequiredService<DeviceCenterView>(), new Size(940, 640)),
+            [ModuleIds.Terminal] = (() => services.GetRequiredService<TerminalView>(), new Size(860, 520)),
+            [ModuleIds.Notepad] = (() => services.GetRequiredService<NotepadView>(), new Size(760, 520)),
             [ModuleIds.ToolManager] = (() => services.GetRequiredService<ToolManagerView>(), new Size(780, 580)),
             [ModuleIds.Settings] = (() => services.GetRequiredService<SettingsView>(), new Size(680, 600)),
             [ModuleIds.Diagnostics] = (() => services.GetRequiredService<DiagnosticsView>(), new Size(860, 600))

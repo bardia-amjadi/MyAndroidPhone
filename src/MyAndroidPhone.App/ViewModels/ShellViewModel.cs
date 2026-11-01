@@ -8,6 +8,7 @@ using MyAndroidPhone.Core.Features;
 using MyAndroidPhone.Core.Instances;
 using MyAndroidPhone.Core.Settings;
 using MyAndroidPhone.Core.Tools;
+using MyAndroidPhone.Core.Workspace;
 using MyAndroidPhone.Desktop.Helpers;
 using MyAndroidPhone.Desktop.Services;
 
@@ -65,7 +66,9 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
     private readonly INotificationService _notifications;
     private readonly ILogger<ShellViewModel> _logger;
     private readonly ActiveInstance _active;
+    private readonly IInstanceWorkspace _workspace;
     private AndroidInstance? _instance;
+    private bool? _lastReady;
 
     public ShellViewModel(
         IFeatureRegistry features,
@@ -75,6 +78,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         IInstanceService instances,
         INotificationService notifications,
         ActiveInstance active,
+        IInstanceWorkspace workspace,
         IUiDispatcher ui,
         ILogger<ShellViewModel> logger)
     {
@@ -87,6 +91,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         _ui = ui;
         _logger = logger;
         _active = active;
+        _workspace = workspace;
 
         foreach (var feature in features.All.Where(f => f.ShowInDock))
         {
@@ -138,6 +143,7 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
     {
         _instance = instance;
         _active.Set(instance);
+        _workspace.Open(instance);
         InstanceName = instance.Name;
         InstanceGlyph = instance.IconGlyph;
         AccentBrush = ColorHelper.Brush(instance.AccentColor);
@@ -176,6 +182,12 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
 
         var device = _devices.Devices.FirstOrDefault(d => d.Serial == _instance.DeviceSerial);
         IsDeviceReady = device is { IsOnline: true };
+        if (_lastReady != IsDeviceReady)
+        {
+            _lastReady = IsDeviceReady;
+            _workspace.Log("device", IsDeviceReady ? $"Phone ready: {device?.DisplayName} ({device?.ConnectionType})" : "Phone is not connected or not ready.");
+        }
+
         if (device is null)
         {
             DeviceStatus = $"{_instance.Name} is not connected. Plug in the phone or choose Reconnect.";
@@ -222,6 +234,8 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
         }
     }
 
+    public void LogActivity(string message) => _workspace.Log("desktop", message);
+
     public void RequestOpen(string featureId) => OpenFeatureRequested?.Invoke(this, featureId);
 
     public void RequestCloseInstance() => CloseInstanceRequested?.Invoke(this, EventArgs.Empty);
@@ -252,6 +266,8 @@ public sealed partial class ShellViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _workspace.Log("instance", "Instance closed.");
+        _workspace.Close();
         _active.Set(null);
         _tools.Changed -= OnStateChanged;
         _settings.Changed -= OnStateChanged;

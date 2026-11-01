@@ -1,0 +1,84 @@
+<UserControl
+    x:Class="MyAndroidPhone.Desktop.Views.TerminalView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MyAndroidPhone.Desktop.ViewModels"
+    xmlns:h="using:MyAndroidPhone.Desktop.Helpers">
+
+    <!-- The terminal keeps its own dark look in every theme. -->
+    <Grid RequestedTheme="Dark" Background="#FF0D1117" RowSpacing="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Padding="12,8" ColumnSpacing="8" Background="#FF161B22">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <FontIcon Glyph="&#xE756;" FontSize="14" Foreground="#FF58A6FF" />
+                <TextBlock Text="{x:Bind ViewModel.InstanceName, Mode=OneWay}" FontWeight="SemiBold" />
+                <TextBlock Text="adb + manual commands" Opacity="0.55" FontSize="12" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                <Button Content="Stop" Command="{x:Bind ViewModel.StopCommand}" Padding="10,3"
+                        IsEnabled="{x:Bind ViewModel.IsRunning, Mode=OneWay}" ToolTipService.ToolTip="Stop the running command (Ctrl+C)" />
+                <Button Content="Show logs" Command="{x:Bind ViewModel.ShowLogsCommand}" Padding="10,3" ToolTipService.ToolTip="List the session logs and open the current one in Notepad" />
+                <Button Content="Help" Command="{x:Bind ViewModel.ShowHelpCommand}" Padding="10,3" />
+                <Button Content="Clear" Command="{x:Bind ViewModel.ClearCommand}" Padding="10,3" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Screen -->
+        <ListView Grid.Row="1" x:Name="Screen" ItemsSource="{x:Bind ViewModel.Lines}" SelectionMode="Extended"
+                  Background="Transparent" Padding="0,6" AutomationProperties.Name="Terminal output"
+                  KeyDown="OnScreenKeyDown">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                    <Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Padding" Value="12,1" />
+                    <Setter Property="Margin" Value="0" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:TerminalLineItem">
+                    <TextBlock FontFamily="Cascadia Mono, Consolas" FontSize="13" TextWrapping="Wrap" IsTextSelectionEnabled="False"
+                               h:TerminalText.Line="{x:Bind}" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Text="Copy" Click="OnCopySelection" />
+                    <MenuFlyoutItem Text="Copy all output" Click="OnCopyAll" />
+                    <MenuFlyoutItem Text="Paste into command line" Click="OnPaste" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Select all" Click="OnSelectAll" />
+                    <MenuFlyoutItem Text="Clear screen" Click="OnClear" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Open session log in Notepad" Click="OnOpenSessionLog" />
+                    <MenuFlyoutItem Text="Show logs" Click="OnShowLogs" />
+                    <MenuFlyoutItem Text="Stop running command" Click="OnStop" />
+                </MenuFlyout>
+            </ListView.ContextFlyout>
+        </ListView>
+
+        <!-- Command line -->
+        <Grid Grid.Row="2" Padding="12,8" ColumnSpacing="8" Background="#FF161B22">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{x:Bind ViewModel.Prompt, Mode=OneWay}" Foreground="#FF58A6FF" FontWeight="SemiBold"
+                       FontFamily="Cascadia Mono, Consolas" FontSize="13" VerticalAlignment="Center" />
+            <TextBox Grid.Column="1" x:Name="CommandBox" Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     FontFamily="Cascadia Mono, Consolas" FontSize="13" Background="Transparent" BorderThickness="0"
+                     PlaceholderText="Type a command and press Enter. Tab completes, Up/Down shows history."
+                     IsSpellCheckEnabled="False" AcceptsReturn="False" PreviewKeyDown="OnCommandKeyDown"
+                     AutomationProperties.Name="Command line" />
+        </Grid>
+    </Grid>
+</UserControl>

@@ -22,6 +22,10 @@ public sealed partial class ShellView : UserControl
     private readonly IToolService _tools;
     private readonly INotificationService _notifications;
     private readonly ThemeService _theme;
+    private readonly StartMenuView _startMenu;
+    private readonly DesktopCommands _commands;
+    private readonly EventHandler<string> _onModuleRequested;
+    private readonly EventHandler _onToggleStartMenu;
     private readonly Dictionary<string, ModuleFrame> _openWindows = new();
     private int _cascade;
 
@@ -34,14 +38,32 @@ public sealed partial class ShellView : UserControl
         ModuleViewFactory modules,
         IToolService tools,
         INotificationService notifications,
-        ThemeService theme)
+        ThemeService theme,
+        StartMenuView startMenu,
+        DesktopCommands commands)
     {
         ViewModel = viewModel;
         _modules = modules;
         _tools = tools;
         _notifications = notifications;
         _theme = theme;
+        _startMenu = startMenu;
+        _commands = commands;
         InitializeComponent();
+
+        OverlayHost.Children.Add(_startMenu);
+        BuildLaunchers();
+        _startMenu.ViewModel.ConnectionsRequested += (_, _) => OpenModule(ModuleIds.Connections);
+        _startMenu.ViewModel.SwitchInstanceRequested += (_, _) =>
+        {
+            _startMenu.Hide();
+            ViewModel.RequestCloseInstance();
+        };
+        _startMenu.ViewModel.CloseRequested += (_, _) => _startMenu.Hide();
+        _onModuleRequested = (_, id) => OpenModule(id);
+        _onToggleStartMenu = (_, _) => _startMenu.Toggle();
+        _commands.ModuleRequested += _onModuleRequested;
+        _commands.StartMenuToggleRequested += _onToggleStartMenu;
 
         ViewModel.OpenFeatureRequested += (_, id) => OpenModule(id);
         ViewModel.CloseInstanceRequested += (_, _) => SwitchInstanceRequested?.Invoke(this, EventArgs.Empty);
@@ -57,6 +79,10 @@ public sealed partial class ShellView : UserControl
         Unloaded += (_, _) =>
         {
             _notifications.Posted -= OnNotificationPosted;
+            _commands.ModuleRequested -= _onModuleRequested;
+            _commands.StartMenuToggleRequested -= _onToggleStartMenu;
+            _startMenu.Hide();
+            _startMenu.ViewModel.Dispose();
             _theme.UseOverride(null);
             foreach (var id in _openWindows.Keys.ToList())
             {
@@ -155,8 +181,39 @@ public sealed partial class ShellView : UserControl
 
     // ----- windows -----
 
+    private void BuildLaunchers()
+    {
+        var order = new[]
+        {
+            ModuleIds.Terminal, ModuleIds.FileExplorer, ModuleIds.Notepad, ModuleIds.TransferCenter,
+            ModuleIds.Connections, ModuleIds.ToolManager, ModuleIds.Settings, ModuleIds.Diagnostics
+        };
+        foreach (var id in order)
+        {
+            var feature = ViewModel.Features.FirstOrDefault(f => f.Id == id);
+            if (feature is null)
+            {
+                continue;
+            }
+
+            var featureId = feature.Id;
+            _startMenu.ViewModel.Launchers.Add(new LauncherItem(featureId, feature.DisplayName, feature.IconGlyph, () => OpenModule(featureId)));
+        }
+    }
+
     private void OpenModule(string id)
     {
+        if (id == ModuleIds.DeviceCenter)
+        {
+            _startMenu.Toggle();
+            return;
+        }
+
+        if (_startMenu.IsOpen)
+        {
+            _startMenu.Hide();
+        }
+
         var feature = ViewModel.Features.FirstOrDefault(f => f.Id == id);
         if (feature is null || !_modules.CanCreate(id))
         {
@@ -185,6 +242,7 @@ public sealed partial class ShellView : UserControl
             return;
         }
 
+        ViewModel.LogActivity("Opened " + feature.DisplayName);
         var window = CreateWindow(feature.DisplayName, id, _modules.Create(id), _modules.PreferredSize(id));
         _openWindows[id] = window;
         Workspace.Children.Add(window);
@@ -294,6 +352,13 @@ public sealed partial class ShellView : UserControl
             _openWindows.Keys.ToHashSet(),
             _openWindows.Where(p => p.Value.State == FrameState.Minimized).Select(p => p.Key).ToHashSet());
         RebuildWindowMenu();
+        _startMenu.ViewModel.SetWindows(_openWindows.Values.Select(w =>
+        {
+            var id = w.FeatureId;
+            var glyph = ViewModel.Features.FirstOrDefault(f => f.Id == id)?.IconGlyph ?? string.Empty;
+            return new RunningWindowItem(id, w.Title, glyph, w.State == FrameState.Minimized,
+                () => OpenModule(id), () => CloseWindow(id));
+        }).ToList());
     }
 
     private void BeginDrag(ModuleFrame window, UIElement header, PointerRoutedEventArgs e)
@@ -390,6 +455,44 @@ public sealed partial class ShellView : UserControl
     // ----- menu handlers -----
 
     private void OnSwitchInstance(object sender, RoutedEventArgs e) => ViewModel.RequestCloseInstance();
+
+    private void OnDesktopOpen(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is string id)
+        {
+            OpenModule(id);
+        }
+    }
+
+    private void OnArrangeWindows(object sender, RoutedEventArgs e)
+    {
+        var index = 0;
+        foreach (var window in _openWindows.Values.Where(w => w.State != FrameState.Minimized).OrderBy(w => Canvas.GetZIndex(w)).ToList())
+        {
+            if (window.State == FrameState.Maximized)
+            {
+                window.Restore(DesktopSize);
+            }
+
+            var left = Math.Max(0, Math.Min(24 + index * 32, DesktopSize.Width - window.ActualWidth));
+            var top = Math.Max(0, Math.Min(16 + index * 32, DesktopSize.Height - window.ActualHeight));
+            Canvas.SetLeft(window, left);
+            Canvas.SetTop(window, top);
+            BringToFront(window);
+            index++;
+        }
+    }
+
+    private void OnShowMinimized(object sender, RoutedEventArgs e)
+    {
+        foreach (var window in _openWindows.Values.Where(w => w.State == FrameState.Minimized).ToList())
+        {
+            window.Unminimize();
+            BringToFront(window);
+        }
+
+        UpdateOpenState();
+    }
 
     private void OnReconnect(object sender, RoutedEventArgs e) => ViewModel.ReconnectCommand.Execute(null);
 
